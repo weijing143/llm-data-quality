@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数据质量 × 大模型 · 近六个月研究汇总（2026.03–2026.09）</title>
+<style>
+  :root{
+    --paper:#f4f1ea;
+    --paper-deep:#ede9de;
+    --ink:#1b1a16;
+    --ink-soft:#4a463c;
+    --muted:#8a8375;
+    --line:#d8d2c2;
+    --forest:#195736;
+    --forest-soft:#e3ece5;
+    --gold:#b07d10;
+    --gold-soft:#f5e8c8;
+    --serif:"Noto Serif SC","Songti SC","STSong","SimSun",serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--paper);
+    background-image:radial-gradient(rgba(27,26,22,.035) 1px, transparent 1px);
+    background-size:22px 22px;
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:16px;
+    line-height:1.85;
+  }
+  a{color:var(--forest);text-decoration:none;border-bottom:1px solid rgba(25,87,54,.35);}
+  a:hover{border-bottom-color:var(--forest);}
+  .wrap{max-width:800px;margin:0 auto;padding:0 28px;}
+
+  /* ===== Hero ===== */
+  header.hero{
+    border-bottom:3px double var(--ink);
+    padding:72px 0 48px;
+    background:linear-gradient(180deg, var(--paper-deep), var(--paper));
+  }
+  .kicker{
+    font-size:13px;letter-spacing:.35em;color:var(--forest);
+    text-transform:uppercase;font-weight:700;margin-bottom:20px;
+  }
+  h1{
+    font-family:var(--serif);
+    font-size:clamp(34px,6vw,54px);
+    line-height:1.25;font-weight:900;letter-spacing:.02em;
+  }
+  h1 em{font-style:normal;color:var(--forest);}
+  .subtitle{margin-top:18px;font-size:17px;color:var(--ink-soft);max-width:640px;}
+  .meta-row{
+    margin-top:26px;display:flex;flex-wrap:wrap;gap:10px 28px;
+    font-size:13px;color:var(--muted);letter-spacing:.05em;
+  }
+  .meta-row b{color:var(--ink);font-weight:600;}
+
+  /* ===== Stat strip ===== */
+  .stats{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+    border:1px solid var(--line);background:#fbf9f4;margin:44px 0 0;
+  }
+  .stat{padding:22px 20px;border-right:1px solid var(--line);}
+  .stat:last-child{border-right:none;}
+  .stat .num{font-family:var(--serif);font-size:30px;font-weight:900;color:var(--forest);line-height:1.2;}
+  .stat .lbl{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.6;}
+  @media(max-width:640px){.stat{border-right:none;border-bottom:1px solid var(--line);}.stat:last-child{border-bottom:none;}}
+
+  /* ===== Sections ===== */
+  section{margin:72px 0;}
+  .sec-head{display:flex;align-items:baseline;gap:16px;border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:30px;}
+  .sec-no{font-family:var(--serif);font-size:15px;font-weight:700;color:var(--gold);letter-spacing:.15em;}
+  h2{font-family:var(--serif);font-size:28px;font-weight:900;letter-spacing:.02em;}
+  .sec-note{font-size:13px;color:var(--muted);margin:-18px 0 28px;}
+  h3{font-family:var(--serif);font-size:19px;font-weight:700;margin:34px 0 12px;color:var(--ink);}
+  p{margin-bottom:14px;color:var(--ink-soft);}
+  p strong, li strong{color:var(--ink);}
+  ul{padding-left:1.3em;margin-bottom:14px;}
+  li{margin-bottom:8px;color:var(--ink-soft);}
+
+  blockquote{
+    border-left:4px solid var(--forest);background:var(--forest-soft);
+    padding:16px 20px;margin:20px 0;font-size:15px;color:var(--ink-soft);
+  }
+  blockquote b{color:var(--forest);}
+
+  /* takeaway list */
+  .take{counter-reset:tk;}
+  .take li{list-style:none;counter-increment:tk;position:relative;padding-left:52px;margin-bottom:18px;}
+  .take li::before{
+    content:counter(tk,decimal-leading-zero);
+    position:absolute;left:0;top:2px;
+    font-family:var(--serif);font-weight:900;font-size:20px;color:var(--gold);
+  }
+
+  /* paper entries */
+  .paper{border-top:1px solid var(--line);padding:22px 0;}
+  .paper:first-of-type{border-top:none;}
+  .paper .p-title{font-family:var(--serif);font-size:18px;font-weight:700;line-height:1.5;}
+  .paper .p-title a{color:var(--ink);border-bottom-color:rgba(27,26,22,.25);}
+  .paper .p-title a:hover{color:var(--forest);}
+  .tags{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 10px;}
+  .tag{
+    font-size:11.5px;letter-spacing:.06em;padding:2px 10px;border-radius:999px;
+    border:1px solid var(--line);color:var(--muted);background:#fbf9f4;white-space:nowrap;
+  }
+  .tag.hot{border-color:var(--forest);color:var(--forest);background:var(--forest-soft);font-weight:600;}
+  .tag.gold{border-color:var(--gold);color:var(--gold);background:var(--gold-soft);font-weight:600;}
+  .paper .p-sum{font-size:15px;}
+
+  /* tables */
+  .tbl{width:100%;border-collapse:collapse;margin:18px 0;font-size:14.5px;background:#fbf9f4;border:1px solid var(--line);}
+  .tbl th{
+    font-family:var(--serif);text-align:left;padding:10px 14px;
+    background:var(--forest);color:#f4f1ea;font-weight:700;letter-spacing:.05em;font-size:13.5px;
+  }
+  .tbl td{padding:10px 14px;border-top:1px solid var(--line);color:var(--ink-soft);vertical-align:top;}
+  .tbl tr td:first-child{color:var(--ink);font-weight:600;white-space:nowrap;}
+
+  /* timeline */
+  .tl{border-left:2px solid var(--forest);margin:10px 0 0 6px;padding-left:26px;}
+  .tl-item{position:relative;margin-bottom:26px;}
+  .tl-item::before{
+    content:"";position:absolute;left:-33px;top:8px;width:12px;height:12px;border-radius:50%;
+    background:var(--paper);border:3px solid var(--forest);
+  }
+  .tl-date{font-size:12.5px;letter-spacing:.1em;color:var(--gold);font-weight:700;}
+  .tl-title{font-family:var(--serif);font-weight:700;font-size:16.5px;margin:2px 0 6px;}
+  .tl-body{font-size:14.5px;color:var(--ink-soft);}
+
+  /* vs block */
+  .vs{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);margin:20px 0;background:#fbf9f4;}
+  .vs>div{padding:20px 22px;}
+  .vs>div:first-child{border-right:1px solid var(--line);}
+  .vs h4{font-family:var(--serif);font-size:15.5px;margin-bottom:8px;}
+  .vs .for h4{color:var(--forest);}
+  .vs .against h4{color:#8c3a1e;}
+  .vs p,.vs li{font-size:14px;}
+  @media(max-width:640px){.vs{grid-template-columns:1fr;}.vs>div:first-child{border-right:none;border-bottom:1px solid var(--line);}}
+
+  footer{
+    border-top:3px double var(--ink);margin-top:80px;padding:34px 0 60px;
+    font-size:13px;color:var(--muted);
+  }
+  footer .src{margin-bottom:6px;word-break:break-all;}
+  footer .src a{color:var(--muted);}
+  .toc{font-size:14px;color:var(--muted);margin-top:22px;}
+  .toc a{margin-right:18px;white-space:nowrap;}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="kicker">RESEARCH DIGEST · 2026.03 — 2026.09 · <a href="index.html" style="color:var(--forest);border-bottom:none;font-weight:700">⌂ 返回首页</a></div>
+    <h1>数据质量，<br>大模型的<em>隐形护城河</em></h1>
+    <p class="subtitle">过去六个月，从 arXiv 到国家数据局，一个共识正在成形：当算力与模型架构趋于同质化，<strong>数据质量</strong>成为拉开模型能力差距的核心变量——它决定每 token 的可学习信号、后训练的效率上限，也正在成为一门独立的生意和一项国家战略。</p>
+    <div class="meta-row">
+      <span>编制日期 <b>2026-09-16</b></span>
+      <span>检索窗口 <b>近 6 个月</b></span>
+      <span>覆盖 <b>论文 10+ · 政策 6 项 · 市场报告 5 份</b></span>
+    </div>
+    <div class="toc">
+      <a href="#s1">① 核心结论</a><a href="#s2">② 学术论文</a><a href="#s3">③ 机制解析</a><a href="#s4">④ 政策与产业</a><a href="#s5">⑤ 趋势研判</a>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="stats">
+    <div class="stat"><div class="num">12.6 万+</div><div class="lbl">全国已建成高质量数据集（截至 2026-08），总体量超 1815 PB</div></div>
+    <div class="stat"><div class="num">~$85 亿</div><div class="lbl">28 家 AI 训练数据公司合计年收入，总估值近 $1000 亿</div></div>
+    <div class="stat"><div class="num">5–7%</div><div class="lbl">原始 Common Crawl 经全流程质量过滤后的留存率</div></div>
+    <div class="stat"><div class="num">817 条</div><div class="lbl">LIMO 用精选样本 SFT 即激发强推理，"Less is More" 路线代表</div></div>
+  </div>
+
+  <!-- ============ 1 核心结论 ============ -->
+  <section id="s1">
+    <div class="sec-head"><span class="sec-no">01</span><h2>核心结论</h2></div>
+    <ol class="take">
+      <li><strong>质量优于数量的证据继续累积。</strong> 前沿共识是"每 token 信号密度"比 token 总量更重要：精心过滤、专家验证的数据能让小模型匹敌大模型；100B 高质量 mid-training 数据对模型行为的改变可超过 500B 普通质量数据。</li>
+      <li><strong>不同训练阶段对"质量"的定义不同。</strong> 2026 年 3 月的理论工作证明：预训练受益于均衡覆盖，SFT 在"少量但对模型有挑战"的样本上学习最好，RL 则需要大量且难度适中的数据——数据质量策略必须按阶段定制。</li>
+      <li><strong>但也出现了重要的反方证据。</strong> 《A Bitter Lesson for Data Filtering》发现：当算力足够大时，不过滤的原始 Common Crawl 反而可能优于一切现有过滤器，交叉点约在 10³⁰ FLOPs——"质量过滤"的价值随算力规模而衰减，是近半年最值得注意的争议。</li>
+      <li><strong>合成数据是解药也是毒药。</strong> Phi 系列证明高质量合成数据可以"以质量换数量"；但递归使用合成数据会导致模型坍缩（model collapse），2025 年 4 月已有 74.2% 的新网页含 AI 生成文本，数据溯源（provenance）成为最高杠杆的风控手段。</li>
+      <li><strong>数据质量已升格为国家战略与独立产业。</strong> 中国 2026 年 6 月印发首个国家级《行业高质量数据集建设行动实施方案》；全球 AI 训练数据市场预计 2026 年达 55 亿美元，数据服务商毛利率约 49%，商业模式正从"卖劳力"转向"卖资产"。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 2 学术论文 ============ -->
+  <section id="s2">
+    <div class="sec-head"><span class="sec-no">02</span><h2>近六个月代表论文</h2></div>
+    <p class="sec-note">按时间排序，均为 2026 年 3 月—9 月发表或重要更新；点击标题查看原文。</p>
+
+    <div class="paper">
+      <div class="p-title"><a href="https://arxiv.org/abs/2603.01293" target="_blank">Theoretical Perspectives on Data Quality and Synergistic Effects in Pre-training and Post-training</a></div>
+      <div class="tags"><span class="tag gold">理论突破</span><span class="tag">arXiv · 2026-03</span><span class="tag">预训练 / SFT / RL</span></div>
+      <p class="p-sum">在"线性回归的上下文权重预测"任务上对 Transformer 做理论分析，首次系统回答"为什么预训练和 RL 需要大数据、而 SFT 小数据反而更好"：<strong>均衡的预训练数据可诱导出潜在能力</strong>，在后训练阶段被激活；SFT 最适合"对预训练模型有挑战性"的小样本集，过大的 SFT 数据集反而会稀释预训练信号；RL 在"大规模但不过难"的数据上最有效。为数据质量的分阶段策略提供了理论地基。</p>
+    </div>
+
+    <div class="paper">
+      <div class="p-title"><a href="https://arxiv.org/pdf/2603.14712" target="_blank">Towards Next-Generation LLM Training: From the Data-Centric Perspective</a></div>
+      <div class="tags"><span class="tag hot">综述</span><span class="tag">arXiv · 2026-03</span><span class="tag">数据中心 AI</span></div>
+      <p class="p-sum">以下一代 LLM 训练为目标的数据中心视角综述，系统梳理数据采集、过滤、合成与评估的全链路，主张行业从"模型中心"转向"数据中心"的研发范式。</p>
+    </div>
+
+    <div class="paper">
+      <div class="p-title"><a href="https://www.sciopen.com/article/10.1007/s11390-026-5948-8" target="_blank">Data Preparation for Large Language Models</a></div>
+      <div class="tags"><span class="tag hot">综述</span><span class="tag">JCST · 2026-04</span><span class="tag">PT / CPT / 后训练</span></div>
+      <p class="p-sum">发表于 Journal of Computer Science and Technology 的系统综述（附 <a href="https://github.com/haolpku/Awesome-LLM-Data-Preparation" target="_blank">Awesome-LLM-Data-Preparation</a> 仓库）。按"训练阶段 × 数据操作"两轴组织全领域，给出一个经验法则：<strong>由粗到细的流水线胜出</strong>——先用便宜的规则过滤器去掉明显坏样本，再把模型化精排的算力集中在有价值的剩余部分；预训练追求吞吐，后训练追求单样本质量。</p>
+    </div>
+
+    <div class="paper">
+      <div class="p-title"><a href="https://arxiv.org/html/2605.02364v1" target="_blank">InfoLaw: Information Scaling Laws for LLMs with Quality-Weighted Mixture Data and Repetition</a></div>
+      <div class="tags"><span class="tag">标度律</span><span class="tag">arXiv · 2026-05</span></div>
+      <p class="p-sum">把"数据质量"显式写入标度律：以质量加权的混合数据与重复次数为变量，建立信息量视角的缩放定律，使"多少高质量 token 等价于多少普通 token"成为可计算、可预测的问题。</p>
+    </div>
+
+    <div class="paper">
+      <div class="p-title"><a href="https://arxiv.org/html/2605.19407v1" target="_blank">A Bitter Lesson for Data Filtering</a></div>
+      <div class="tags"><span class="tag gold">反方证据</span><span class="tag">arXiv · 2026-05</span><span class="tag">争议 · 必读</span></div>
+      <p class="p-sum">近半年最具争议性的工作。作者严肃检验"在大算力极限下数据过滤是否必要"，结果拒绝了这一假设：<strong>不限成本地比较最佳性能时，原始 Common Crawl 池优于所有受测过滤器</strong>；推导出的标度律预测 DCLM-Pool（240 万亿 token）约在 10³⁰ FLOPs 时"不过滤"成为最优。大模型甚至能从打乱词序的文档中获益。结论：质量过滤更像"算力受限时的省钱手段"，而非永恒真理。</p>
+    </div>
+
+    <div class="paper">
+      <div class="p-title"><a href="https://arxiv.org/html/2605.11405v1" target="_blank">A Prescription for Better VLMs through Data Curation Alone</a></div>
+      <div class="tags"><span class="tag hot">多模态</span><span class="tag">arXiv · 2026-05</span></div>
+      <p class="p-sum">把图文联合去重、联合过滤、目标分布匹配的混合设计与合成数据组合成端到端流水线，在 MAmmoTH-VL-12M 的单图像子集（10M）上训练 1B–4B 模型，<strong>仅靠数据治理</strong>即可与使用约 150 倍算力、且经过完整后训练的同级公开模型（Qwen3-VL、InternVL3.5 等）竞争——"数据质量可以替代算力"的强证据。</p>
+    </div>
+
+    <div class="paper">
+      <div class="p-title"><a href="https://arxiv.org/html/2606.22079v2" target="_blank">Where Does the Signal Live? A Web Data Recipe for Medical Encoder Pretraining</a></div>
+      <div class="tags"><span class="tag">垂直领域</span><span class="tag">arXiv · 2026-09 更新</span></div>
+      <p class="p-sum">在术语密集的医学领域发现：<strong>每 token 实体密度</strong>作为过滤信号优于通用的"教育质量"分类器；同时 LLM 改写（rephrasing）必须施加严格的实体保真约束，否则幻觉内容会在多 epoch 训练中污染分布。说明质量信号是领域相关的，不存在放之四海皆准的过滤器。</p>
+    </div>
+
+    <div class="paper">
+      <div class="p-title"><a href="https://www.mdpi.com/2076-3417/16/15/7481" target="_blank">PU-Based Quality Classifier for LLM Training Texts</a></div>
+      <div class="tags"><span class="tag">方法</span><span class="tag">MDPI Applied Sciences · 2026-07</span></div>
+      <p class="p-sum">用 PU（Positive-Unlabeled）学习训练文本质量分类器，缓解"高质量标注样本稀缺"下质量分类器的训练难题。同文献还援引了 IBM 的 GneissWeb（ICLR 2026）等大规模高质量数据准备系统。</p>
+    </div>
+
+    <div class="paper">
+      <div class="p-title"><a href="https://arxiv.org/pdf/2608.04001" target="_blank">GAIR "Less is More" 谱系：LIMO / LIMR（2026 年综述讨论）</a></div>
+      <div class="tags"><span class="tag hot">后训练</span><span class="tag">2026-08 综述引用</span></div>
+      <p class="p-sum">"Less is More" 路线在 2026 年持续发酵：LIMO 仅用 <strong>817 条</strong>精选数学题 + 高质量长 CoT 做 SFT 即激发强推理（Less-Is-More Reasoning Hypothesis）；LIMR 把同一思想搬到 RL，用学习影响力度量（LIM）选出 <strong>1,389 条</strong> prompt 即可匹配甚至超过全量 8,523 条的 RL 训练——后训练效率由数据选择与监督结构驱动，而非原始数量。</p>
+    </div>
+
+    <div class="paper">
+      <div class="p-title"><a href="https://aibuzz.blog/ai-model-collapse-data-poisoning/" target="_blank">模型坍缩与数据投毒：2026 年风险综述</a></div>
+      <div class="tags"><span class="tag gold">风险</span><span class="tag">行业综述 · 2026-08</span></div>
+      <p class="p-sum">综合 Nature 2024 奠基性研究与 2025–2026 年证据：递归使用合成数据会造成长尾知识丢失与分布坍缩；仅 0.1% 的预训练数据被投毒即可让后门在微调与安全对齐后存活；74.2% 的新网页已含 AI 文本（2025-04），Epoch AI 预测人类文本数据在 2026–2032 年间成为瓶颈。<strong>"溯源优先于提示词"（provenance beats prompts）</strong>成为共识性防御原则，C2PA 内容凭证是主要技术标准。</p>
+    </div>
+  </section>
+
+  <!-- ============ 3 机制解析 ============ -->
+  <section id="s3">
+    <div class="sec-head"><span class="sec-no">03</span><h2>数据质量为什么值钱：四个机制</h2></div>
+
+    <h3>3.1 各阶段对质量与数量的需求不对称</h3>
+    <table class="tbl">
+      <tr><th>训练阶段</th><th>典型规模</th><th>单样本成本</th><th>主导过滤方式</th><th>首要目标</th></tr>
+      <tr><td>预训练 PT</td><td>10⁹–10¹² tokens</td><td>低</td><td>启发式 + 可扩展分类器</td><td>广度覆盖与多样性</td></tr>
+      <tr><td>持续预训练 CPT</td><td>10⁷–10⁹ tokens</td><td>中</td><td>混合式</td><td>时效性与领域适配</td></tr>
+      <tr><td>后训练 SFT/RLHF</td><td>10³–10⁶ 条样本</td><td>高</td><td>细粒度、严格</td><td>对齐与任务能力</td></tr>
+    </table>
+    <p>越靠近后训练，单样本质量越关键：Llama 3.1 405B 技术报告显示数万条精选人工示范即可把指令跟随拉到接近 GPT-4 水平，之后每提升 1% 都需要指数级人工成本——这正是 LIMO/LIMR 等"数据最小化"路线在 2026 年爆发的背景。</p>
+
+    <h3>3.2 生产级过滤流水线的"幸存者偏差"</h3>
+    <p>从前沿实验室的工程实践看，一条 FineWeb-Edu 风格的完整流水线要经历八个阶段——格式归一化、语种识别、精确去重、MinHash 模糊去重、启发式质量过滤、分类器质量打分、PII 清除、基准去污——<strong>原始 Common Crawl 的综合留存率只有 5–7%</strong>：100T 原始 token 最终只剩 5–7T 高质量训练 token。基准去污（decontamination）在 2024–2026 年多次公开"翻车"后，已被前沿实验室视为发布阻断级的合规步骤，而非质量增强项。</p>
+
+    <h3>3.3 合成数据：以质量换数量，但以多样性为抵押</h3>
+    <div class="vs">
+      <div class="for">
+        <h4>正面：Phi 系列的证据</h4>
+        <p>微软 Phi 系列用"教科书级"合成数据让小模型在推理任务上匹敌大得多的模型。Cosmopedia 团队复现后发现：有效的是<strong>主题多样性、明确的受众定位、教学式结构与严格过滤</strong>，而不是生成量本身——Phi 以更低的 token 总量达成目标，靠的是每 token 更高的信号密度。</p>
+      </div>
+      <div class="against">
+        <h4>反面：模型坍缩的代价</h4>
+        <p>递归地"用模型输出训练模型"会逐代丢失长尾知识（早期坍缩），最终收敛到单一分布（晚期坍缩）。且坍缩在基准测试上可能"看起来正常"——同质化模型在被污染的测试集上分数稳定，却在多样性指标上持续退化。防御核心是保持人类数据配比上限 + 全链路内容溯源。</p>
+      </div>
+    </div>
+
+    <h3>3.4 争议：过滤的价值随算力衰减？</h3>
+    <blockquote><b>阅读建议：</b>"质量至上"与"苦涩教训"两派其实回答的是不同问题——前者回答"在有限算力下怎么训出最强模型"，后者回答"在算力无限增大时过滤是否仍然必要"。对 2026 年的实务者而言，结论相当务实：<strong>在你我的算力预算内，好数据仍是最便宜的性能提升；但不要把任何具体过滤器当成永恒资产</strong>，其价值需要随算力规模重新评估。</blockquote>
+  </section>
+
+  <!-- ============ 4 政策与产业 ============ -->
+  <section id="s4">
+    <div class="sec-head"><span class="sec-no">04</span><h2>政策与产业动态</h2></div>
+
+    <h3>4.1 中国：高质量数据集成为国家级行动</h3>
+    <div class="tl">
+      <div class="tl-item">
+        <div class="tl-date">2026-03-05 · 江苏</div>
+        <div class="tl-title">江苏省数据局征集 2026 年高质量数据集建设项目</div>
+        <div class="tl-body">面向工业制造、智慧能源、低空经济、具身智能等方向开展先行先试，优秀项目优先推荐至国家数据局，并推动纳入"人工智能+"支持范围。</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">2026-06-03 · 国家数据局</div>
+        <div class="tl-title">《关于推进行业高质量数据集建设行动的实施方案》（国数科基〔2026〕25 号）</div>
+        <div class="tl-body">国家层面首次针对"数据赋能 AI"的系统性部署，明确行业高质量数据集是"可直接用于开发和训练 AI 模型、能有效提升模型性能"的基础性关键资源，部署<strong>强基扩容、应用赋能、提质增效、管理服务、价值释放、标注攻坚</strong>六大专项行动，目标 2028 年建成一批行业数据集、AI 典型场景与标准。</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">2026-07-28 · 数博会新闻发布会</div>
+        <div class="tl-title">全国高质量数据集超 12 万个 / 1565 PB</div>
+        <div class="tl-body">国家数据局副局长余英介绍：5 项国家标准（建设指南、格式要求、分类指南等）初步构建"数据质量检测 + 基准模型验证"的检测方法；国家数据集管理服务系统已认证供需主体 578 家、上架数据集 1433 个；并探索<strong>词元（Token）交易</strong>等新型交易模式，培育"为优质数据付费"的市场共识。</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">2026-08-05 · 武汉</div>
+        <div class="tl-title">《武汉市行业高质量数据集建设行动方案（2026—2028 年）》</div>
+        <div class="tl-body">2026 年是国家数据局明确的"数据价值释放年"。武汉目标到 2028 年建成行业高质量数据集 200 个以上，支撑 200 个以上垂类大模型训练和智能体开发，助力全市 AI 产业规模超 2000 亿元。同期重庆、贵州、新疆等地出台最高 300–500 万元的高质量数据集建设补贴。</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-date">2026-08-28 · 贵阳数博会</div>
+        <div class="tl-title">"3NM" 工作体系公布：12.6 万个数据集 / 1815 PB</div>
+        <div class="tl-body">国家数据局副局长夏冰系统阐述"3NM"体系——三大支撑（国家数据集管理服务系统、高质量数据集开源社区、数据标注网络）、N 个垂类先行先试（106 家链主单位、140 项任务）、M 个地方实践。截至 2026 年 8 月，全国已建成高质量数据集超 12.6 万个，总体量超 1815 PB。</div>
+      </div>
+    </div>
+
+    <h3>4.2 市场：数据质量成为一门独立的生意</h3>
+    <table class="tbl">
+      <tr><th>指标</th><th>数值</th><th>口径 / 来源</th></tr>
+      <tr><td>AI 训练数据公司收入</td><td>28 家合计年收入约 $85 亿，总估值近 $1000 亿</td><td>Menlo Ventures 合伙人 Deedy 统计，2026-07</td></tr>
+      <tr><td>全球 AI 训练数据市场</td><td>2026 年约 $55 亿 → 2034 年 $227 亿（CAGR 19.3%）</td><td>Stratistics MRC</td></tr>
+      <tr><td>数据标注服务市场</td><td>2025 年 $42–72 亿</td><td>研究机构估算</td></tr>
+      <tr><td>"数据合同"市场</td><td>$12.8 亿（2025）→ $36.4 亿（2030）</td><td>The Business Research Company</td></tr>
+      <tr><td>训练数据服务毛利率</td><td>约 49%（2025）</td><td>QYResearch</td></tr>
+      <tr><td>合成数据生成市场</td><td>$127.4 亿（2025）→ $879.6 亿（2030，预测）</td><td>IIM，2026-07</td></tr>
+    </table>
+    <p>商业模式正在从"卖劳力"转向"卖资产"：Scale AI 已从按月打包升级为 API 按需交付（最快一小时拿到生产级标签数据），行业开始探索词元交易与数据订阅制。数据公司赚的不再是标注人工费，而是深度参与模型研发的服务溢价。</p>
+
+    <h3>4.3 数据质量 = 安全与合规资产</h3>
+    <ul>
+      <li><strong>信通院《人工智能背景下数据安全八大发展趋势》（2026-07）</strong>：把"数据质量污染 → 模型性能劣化"列为八大趋势之一，重申 "Garbage In, Garbage Out"；核心训练数据泄露会让竞争对手快速克隆模型能力，数据安全失误可直接导致数据价值大幅缩水。</li>
+      <li><strong>AI4S 案例（2026-07，上市公司公告引用）</strong>：IsoDDE 仅凭氨基酸序列即识别出 Cereblon 蛋白 2026 年初才被实验证实的隐藏结合位点，部分指标优于基于公开 PDB 数据训练的 AlphaFold3——业内分析将差距归因于训练数据来源与质量差异，凸显<strong>专有高质量数据的壁垒价值</strong>。</li>
+      <li><strong>欧盟 AI 法案第 10 条</strong>对高风险系统的训练数据质量提出强制要求（2027 年 12 月生效），数据治理项目需要在此之前就位。</li>
+    </ul>
+  </section>
+
+  <!-- ============ 5 趋势研判 ============ -->
+  <section id="s5">
+    <div class="sec-head"><span class="sec-no">05</span><h2>趋势研判：给三类读者的启示</h2></div>
+
+    <h3>对模型研发者</h3>
+    <ul>
+      <li>把数据当作<strong>版本化产品</strong>而非"原料文件夹"：每个过滤决策都要可被下游消融实验验证或证伪。</li>
+      <li>按阶段配置质量策略：预训练求覆盖，SFT 求精而难，RL 求量大而适中；质量信号是领域相关的（医学领域的实体密度优于通用教育质量分）。</li>
+      <li>对合成数据设定配比上限并做全链路溯源（human / AI-generated / unknown 三分），"溯源优先于提示词"。</li>
+      <li>跟踪"过滤价值随算力衰减"的争议：过滤器是算力约束下的工具，不是信仰。</li>
+    </ul>
+
+    <h3>对企业与投资者</h3>
+    <ul>
+      <li>数据已从成本项变为资产项：关注"数据合同"、词元交易、数据订阅制等新商业模式。</li>
+      <li>垂直领域的高质量专有数据是最难被绕过的壁垒（AI4S、具身智能、工业质检均为近半年热点）。</li>
+      <li>合规窗口期明确：欧盟 AI 法案与中国五大国家标准都在把"数据质量"从最佳实践变成强制要求。</li>
+    </ul>
+
+    <h3>对政策观察者</h3>
+    <ul>
+      <li>中国路线清晰：国家行动方案 → 六大专项 → 国家标准 → 词元交易，"为优质数据付费"正从口号变为制度设计。</li>
+      <li>"数据价值释放年"（2026）之后，观察点转向数据集的市场化流通效率与质量检测标准的落地执行。</li>
+    </ul>
+  </section>
+
+  <footer>
+    <div class="wrap" style="padding:0;">
+      <p style="color:var(--muted);font-size:13px;margin-bottom:16px;">本页基于 2026-09-16 对公开网络资料的检索整理，覆盖 2026 年 3 月—9 月的论文、政策与市场信息；所有数据均来自下列来源，市场预测类数据口径各异，仅供参考，不构成投资建议。</p>
+      <div class="src">论文：arXiv:2603.01293 · arXiv:2603.14712 · JCST 10.1007/s11390-026-5948-8 · arXiv:2605.02364 · arXiv:2605.19407 · arXiv:2605.11405 · arXiv:2606.22079 · MDPI Appl. Sci. 16(15):7481 · arXiv:2608.04001</div>
+      <div class="src">政策：国家数据局（nda.gov.cn）· 国家发改委（ndrc.gov.cn）· 江苏省数据局（cnr.cn）· 武汉市数据局（wuhan.gov.cn）· 中国信通院（dfcfw.com 转载）</div>
+      <div class="src">市场：腾讯新闻/证券之星 2026-07-27 · Fortune Business Insights · IIM 信息 · Toloka AI · Spheron · Digital Applied</div>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

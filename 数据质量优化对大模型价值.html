@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>数据质量优化对大模型的价值 · 机制 / 工程 / 投入产出</title>
+<style>
+/* ============================================================
+   设计令牌：数据工程主题（深空底 + 信号绿 + 靛蓝 + 琥珀噪声）
+   ============================================================ */
+:root{
+  color-scheme: dark;
+  --bg:#07090f;
+  --bg-2:#0b0e16;
+  --bg-3:#11151f;
+  --bg-4:#171c28;
+  --tx-0:rgba(255,255,255,.96);
+  --tx-1:rgba(255,255,255,.80);
+  --tx-2:rgba(255,255,255,.58);
+  --tx-3:rgba(255,255,255,.36);
+  --brd:rgba(255,255,255,.10);
+  --brd-2:rgba(255,255,255,.20);
+  --sig:#4ADE9B;         /* 信号：高质量数据 */
+  --sig-d:#16A34A;
+  --ind:#818CF8;         /* 结构：模型/算法 */
+  --amb:#FBBF24;         /* 噪声：脏数据 */
+  --dan:#FB7185;         /* 风险：污染/崩溃 */
+  --r-s:5px; --r-m:10px; --r-l:16px; --r-xl:24px; --r-full:9999px;
+  --ui:"Inter","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono","Cascadia Code",Consolas,"SF Mono",monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth; scroll-padding-top:78px}
+body{
+  margin:0; background:var(--bg); color:var(--tx-0);
+  font-family:var(--ui); font-size:15px; line-height:1.68;
+  -webkit-font-smoothing:antialiased; overflow-x:hidden;
+}
+a{color:inherit; text-decoration:none}
+button{font:inherit; color:inherit; cursor:pointer}
+.wrap{width:min(1200px,100% - 2.2rem); margin-inline:auto}
+h1,h2,h3,h4{letter-spacing:-.022em; margin:0}
+b,strong{font-weight:750; color:#fff}
+em{font-style:normal; color:var(--sig)}
+body::before{
+  content:""; position:fixed; inset:-30vh -10vw; z-index:-1; pointer-events:none;
+  background:
+    radial-gradient(40vw 34vw at 12% 2%, rgba(74,222,155,.13), transparent 62%),
+    radial-gradient(36vw 32vw at 88% 6%, rgba(129,140,248,.14), transparent 60%),
+    radial-gradient(30vw 30vw at 60% 46%, rgba(251,191,36,.05), transparent 65%);
+}
+
+/* ============================================================
+   顶栏
+   ============================================================ */
+.top{
+  position:sticky; top:0; z-index:100; height:60px;
+  background:rgba(7,9,15,.74); backdrop-filter:blur(14px) saturate(160%);
+  border-bottom:1px solid var(--brd);
+}
+.top-in{display:flex; align-items:center; gap:1rem; height:100%}
+.logo{display:flex; align-items:center; gap:.6rem; font-weight:800; white-space:nowrap; font-size:.94rem}
+.logo-note{
+  width:24px; height:24px; border-radius:7px; flex:none; position:relative;
+  background:linear-gradient(135deg,var(--sig),var(--ind));
+}
+.logo-note::after{content:""; position:absolute; inset:7px 6px; border-radius:1.5px; background:var(--bg)}
+.top nav{display:flex; gap:.1rem; margin-left:auto; overflow-x:auto; scrollbar-width:none}
+.top nav::-webkit-scrollbar{display:none}
+.top nav a{
+  padding:.34rem .66rem; border-radius:var(--r-full); font-size:.82rem;
+  color:var(--tx-2); white-space:nowrap; transition:.2s;
+}
+.top nav a:hover{color:var(--tx-0); background:rgba(255,255,255,.08)}
+.top nav a.on{color:#eafff5; background:rgba(74,222,155,.14); box-shadow:inset 0 0 0 1px rgba(74,222,155,.32)}
+
+/* ============================================================
+   Hero
+   ============================================================ */
+.hero{padding:clamp(2.4rem,6vw,4.2rem) 0 1rem}
+.eyebrow{
+  font-family:var(--mono); font-size:.74rem; letter-spacing:.16em; color:var(--sig);
+  display:inline-flex; align-items:center; gap:.5rem; margin-bottom:.9rem;
+}
+.eyebrow::before{content:""; width:26px; height:1px; background:linear-gradient(90deg,var(--sig),transparent)}
+.hero h1{font-size:clamp(1.55rem,4.8vw,3.2rem); line-height:1.14; font-weight:850; text-wrap:balance}
+.hero h1 .g{
+  background:linear-gradient(100deg,var(--sig) 10%,var(--ind) 90%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+.hero .lede{max-width:66ch; color:var(--tx-1); margin:1rem 0 0; font-size:1.02rem}
+.hero .lede b{color:#fff}
+
+.stats{display:grid; gap:.7rem; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); margin-top:1.5rem}
+.stat{
+  border:1px solid var(--brd); border-radius:var(--r-l); padding:.85rem 1rem;
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015));
+}
+.stat .n{font-family:var(--mono); font-size:1.3rem; font-weight:700; color:#fff; letter-spacing:-.01em}
+.stat .n small{font-size:.72rem; color:var(--tx-2); font-weight:600; margin-left:.3rem; font-family:var(--ui)}
+.stat .l{font-size:.79rem; color:var(--tx-2); margin-top:.25rem}
+.stat.s1{border-color:rgba(74,222,155,.32)} .stat.s1 .n{color:#c9ffe6}
+.stat.s2{border-color:rgba(129,140,248,.32)} .stat.s2 .n{color:#dfe3ff}
+.stat.s3{border-color:rgba(251,191,36,.30)} .stat.s3 .n{color:#ffe9b8}
+
+.pills{display:flex; flex-wrap:wrap; gap:.42rem; margin-top:1.2rem}
+.pill{
+  padding:.32rem .7rem; border-radius:var(--r-full); font-size:.78rem; font-weight:600;
+  border:1px solid var(--brd-2); background:rgba(255,255,255,.045); color:var(--tx-1);
+}
+.pill.g{border-color:rgba(74,222,155,.42); background:rgba(74,222,155,.10); color:#c9ffe6}
+.pill.i{border-color:rgba(129,140,248,.40); background:rgba(129,140,248,.10); color:#dfe3ff}
+.pill.a{border-color:rgba(251,191,36,.36); background:rgba(251,191,36,.09); color:#ffe9b8}
+
+/* ============================================================
+   通用区块
+   ============================================================ */
+section{margin-bottom:clamp(2.3rem,5.5vw,3.5rem); scroll-margin-top:86px}
+.sec-head{display:flex; align-items:baseline; gap:.8rem; flex-wrap:wrap; margin-bottom:1.05rem}
+.sec-idx{
+  font-family:var(--mono); font-size:.71rem; letter-spacing:.12em; color:var(--sig);
+  border:1px solid rgba(74,222,155,.34); padding:.14rem .45rem; border-radius:var(--r-s);
+}
+.sec-head h2{font-size:clamp(1.18rem,2.5vw,1.58rem); font-weight:790}
+.sec-head p{flex:1 1 100%; margin:.15rem 0 0; color:var(--tx-2); font-size:.88rem; max-width:78ch}
+
+.grid{display:grid; gap:.85rem}
+.g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(238px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(186px,1fr))}
+.card{
+  border:1px solid var(--brd); border-radius:var(--r-l);
+  background:linear-gradient(180deg,rgba(255,255,255,.052),rgba(255,255,255,.016));
+  padding:1.02rem 1.08rem;
+  transition:transform .22s cubic-bezier(.2,.8,.2,1), border-color .22s, background .22s;
+}
+.card:hover{transform:translateY(-3px); border-color:var(--brd-2); background:rgba(255,255,255,.068)}
+.card h3{font-size:.97rem; font-weight:730; margin-bottom:.34rem}
+.card h4{font-size:.88rem; font-weight:700; margin:.7rem 0 .3rem; color:#fff}
+.card p{margin:0; color:var(--tx-1); font-size:.855rem}
+.card ul{margin:.4rem 0 0; padding-left:1.05rem; color:var(--tx-1); font-size:.85rem}
+.card li{margin:.22rem 0}
+.card .kicker{font-family:var(--mono); font-size:.68rem; color:var(--tx-3); letter-spacing:.08em; text-transform:uppercase; display:block; margin-bottom:.35rem}
+.card.sig{border-color:rgba(74,222,155,.28)}
+.card.ind{border-color:rgba(129,140,248,.26)}
+.card.amb{border-color:rgba(251,191,36,.24)}
+.card.dan{border-color:rgba(251,113,133,.26)}
+
+.callout{
+  padding:.85rem 1rem; border-radius:var(--r-m); font-size:.855rem; color:var(--tx-1);
+  border:1px solid rgba(74,222,155,.30); background:rgba(74,222,155,.065);
+}
+.callout.warn{border-color:rgba(251,191,36,.32); background:rgba(251,191,36,.06)}
+.callout.dan{border-color:rgba(251,113,133,.32); background:rgba(251,113,133,.06)}
+.callout b{color:#fff}
+
+/* 决策树 */
+.dtree{display:grid; gap:.5rem; margin-top:.95rem}
+.dstep{
+  display:grid; grid-template-columns:30px 1fr; gap:.75rem; align-items:start;
+  border:1px solid var(--brd); border-radius:var(--r-m); padding:.7rem .9rem;
+  background:linear-gradient(90deg,rgba(255,255,255,.045),rgba(255,255,255,.015));
+}
+.dstep .i{
+  width:24px; height:24px; border-radius:50%; display:grid; place-items:center; flex:none;
+  font-family:var(--mono); font-size:.72rem; background:rgba(74,222,155,.16);
+  color:#c9ffe6; border:1px solid rgba(74,222,155,.35);
+}
+.dstep.red .i{background:rgba(251,113,133,.16); color:#ffd9e0; border-color:rgba(251,113,133,.35)}
+.dstep .q{font-size:.88rem; font-weight:700; color:#fff}
+.dstep .a{font-size:.81rem; color:var(--tx-2); margin-top:.15rem}
+.dstep .a em{color:var(--sig)}
+.dstep .a i{color:var(--amb); font-style:normal}
+
+/* 迷你比例条 */
+.minibar{display:flex; height:9px; border-radius:5px; overflow:hidden; margin-top:.7rem; background:rgba(255,255,255,.08)}
+.minibar .seg{display:block}
+.minibar .seg.data{background:linear-gradient(90deg,var(--sig),#8ef0bf); min-width:3px}
+.minibar .seg.train{background:rgba(129,140,248,.55)}
+.minilegend{display:flex; justify-content:space-between; gap:.6rem; font-size:.72rem; color:var(--tx-3); margin-top:.35rem; font-family:var(--mono)}
+
+code{font-family:var(--mono); font-size:.83em; color:#c9ffe6; background:rgba(74,222,155,.12); padding:.08em .34em; border-radius:4px}
+.formula{
+  font-family:var(--mono); font-size:.95rem; text-align:center; padding:1.1rem .8rem;
+  border:1px solid var(--brd); border-radius:var(--r-l); background:#080b12; color:#e6ecff;
+  line-height:2;
+}
+.formula .term-e{color:var(--amb); font-weight:700}
+.formula .term-n{color:var(--ind); font-weight:700}
+.formula .term-d{color:var(--sig); font-weight:700}
+.formula small{display:block; font-size:.72rem; color:var(--tx-3); font-family:var(--ui); letter-spacing:0}
+
+/* ============================================================
+   缩放律交互
+   ============================================================ */
+.lab{
+  border:1px solid var(--brd); border-radius:var(--r-xl); overflow:hidden;
+  background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.012));
+}
+.lab-in{display:grid; grid-template-columns:1.25fr .95fr; gap:0}
+@media (max-width:900px){ .lab-in{grid-template-columns:1fr} }
+.lab-chart{padding:1rem 1.1rem 1.2rem; border-right:1px solid var(--brd); min-width:0}
+.lab-side{padding:1rem 1.1rem 1.2rem; display:flex; flex-direction:column; gap:.85rem; min-width:0}
+.lab h3{font-size:.95rem; font-weight:730}
+.lab .sub{font-size:.78rem; color:var(--tx-2); margin-top:.2rem}
+svg.chart{width:100%; height:auto; display:block; margin-top:.6rem}
+.legend{display:flex; gap:.9rem; flex-wrap:wrap; font-size:.76rem; color:var(--tx-2); margin-top:.5rem}
+.legend i{display:inline-block; width:16px; height:3px; border-radius:2px; vertical-align:middle; margin-right:.35rem}
+.ctl{display:grid; gap:.45rem}
+.ctl label{font-size:.79rem; color:var(--tx-2); display:flex; justify-content:space-between; gap:1rem}
+.ctl label b{font-family:var(--mono); color:#fff}
+input[type=range]{
+  -webkit-appearance:none; appearance:none; width:100%; height:4px; border-radius:3px;
+  background:linear-gradient(90deg,var(--sig),var(--ind)); outline:none;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none; width:17px; height:17px; border-radius:50%;
+  background:#fff; border:3px solid var(--sig); cursor:pointer; box-shadow:0 3px 12px rgba(0,0,0,.6);
+}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#fff;border:3px solid var(--sig);cursor:pointer}
+.readout{
+  border:1px solid rgba(74,222,155,.28); background:rgba(74,222,155,.07);
+  border-radius:var(--r-m); padding:.75rem .85rem;
+}
+.readout .big{font-family:var(--mono); font-size:1.5rem; font-weight:700; color:#c9ffe6; line-height:1.2}
+.readout .cap{font-size:.77rem; color:var(--tx-2); margin-top:.2rem}
+.readout .rows{margin-top:.6rem; padding-top:.55rem; border-top:1px solid rgba(74,222,155,.22); display:grid; gap:.28rem}
+.readout .rows div{display:flex; justify-content:space-between; gap:.8rem; font-size:.78rem; color:var(--tx-2)}
+.readout .rows b{font-family:var(--mono); color:#fff; font-weight:600}
+.readout .rows b.risk{color:#ffe9b8}
+
+/* ============================================================
+   流水线
+   ============================================================ */
+.rail{display:flex; gap:.4rem; overflow-x:auto; padding:.15rem .1rem .7rem; scrollbar-width:thin}
+.rail::-webkit-scrollbar{height:6px}
+.rail::-webkit-scrollbar-thumb{background:var(--brd-2); border-radius:3px}
+.stop{
+  flex:none; min-width:132px; text-align:left; padding:.62rem .7rem; border-radius:var(--r-m);
+  border:1px solid var(--brd); background:rgba(255,255,255,.035); transition:.2s; position:relative;
+}
+.stop:hover{border-color:var(--brd-2); background:rgba(255,255,255,.07)}
+.stop.on{border-color:rgba(74,222,155,.5); background:rgba(74,222,155,.12)}
+.stop .no{font-family:var(--mono); font-size:.66rem; color:var(--tx-3); display:block}
+.stop.on .no{color:var(--sig)}
+.stop .nm{font-size:.84rem; font-weight:700; display:block; margin-top:.1rem; white-space:nowrap}
+.stop .tag{font-size:.7rem; color:var(--tx-3); display:block; margin-top:.15rem}
+.panel{
+  border:1px solid var(--brd); border-radius:var(--r-l); padding:1rem 1.1rem;
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015));
+}
+.panel .ph{display:flex; align-items:baseline; gap:.6rem; flex-wrap:wrap; margin-bottom:.6rem}
+.panel .ph h3{font-size:1rem; font-weight:760}
+.panel .ph .badge{font-family:var(--mono); font-size:.7rem; color:var(--tx-2); border:1px solid var(--brd-2); padding:.1rem .42rem; border-radius:var(--r-s)}
+.panel .cols{display:grid; gap:.8rem; grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.panel .cols > div{font-size:.85rem; color:var(--tx-1)}
+.panel .cols h4{font-size:.75rem; font-family:var(--mono); letter-spacing:.06em; text-transform:uppercase; color:var(--tx-3); margin:0 0 .3rem}
+.panel .cols ul{margin:0; padding-left:1.05rem}
+.panel .cols li{margin:.2rem 0}
+
+/* ============================================================
+   表格
+   ============================================================ */
+.tbl-wrap{overflow-x:auto; border:1px solid var(--brd); border-radius:var(--r-l); background:rgba(255,255,255,.022)}
+table{border-collapse:collapse; width:100%; min-width:640px; font-size:.845rem}
+th,td{padding:.62rem .82rem; text-align:left; border-bottom:1px solid var(--brd); vertical-align:top}
+th{font-size:.71rem; letter-spacing:.06em; text-transform:uppercase; color:var(--tx-3); background:rgba(255,255,255,.04); position:sticky; top:0}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:rgba(74,222,155,.05)}
+td .num{font-family:var(--mono); color:#c9ffe6}
+td.dim{color:var(--tx-2)}
+table.mini{min-width:430px; font-size:.82rem}
+table.mini th,table.mini td{padding:.5rem .6rem}
+table.mini th,table.mini td:first-child,table.mini td:nth-child(3),table.mini td:nth-child(4){white-space:nowrap}
+
+/* ============================================================
+   清单
+   ============================================================ */
+.todo{border:1px solid var(--brd); border-radius:var(--r-l); overflow:hidden; background:rgba(255,255,255,.022)}
+.todo-bar{display:flex; align-items:center; gap:.8rem; padding:.7rem .95rem; border-bottom:1px solid var(--brd); background:rgba(255,255,255,.03)}
+.todo-bar .track{flex:1; height:5px; border-radius:3px; background:rgba(255,255,255,.1); overflow:hidden}
+.todo-bar .fill{height:100%; width:0; background:linear-gradient(90deg,var(--sig),var(--ind)); transition:width .3s}
+.todo-bar .cnt{font-family:var(--mono); font-size:.78rem; color:var(--tx-2); white-space:nowrap}
+.todo-item{
+  display:grid; grid-template-columns:22px 1fr; gap:.7rem; padding:.62rem .95rem;
+  border-bottom:1px solid var(--brd); cursor:pointer; transition:.16s; align-items:start;
+}
+.todo-item:last-child{border-bottom:none}
+.todo-item:hover{background:rgba(255,255,255,.035)}
+.todo-item .box{
+  width:18px; height:18px; border-radius:5px; border:1.5px solid var(--brd-2); margin-top:.15rem;
+  display:grid; place-items:center; font-size:.7rem; color:transparent; transition:.16s;
+}
+.todo-item.done .box{background:var(--sig); border-color:var(--sig); color:#04150d}
+.todo-item.done .tx{color:var(--tx-3); text-decoration:line-through}
+.todo-item .tx{font-size:.87rem}
+.todo-item .tx span{display:block; font-size:.78rem; color:var(--tx-3); margin-top:.12rem; text-decoration:none}
+
+/* ============================================================
+   页脚 / 通用
+   ============================================================ */
+footer{border-top:1px solid var(--brd); padding:1.8rem 0 2.8rem; color:var(--tx-3); font-size:.83rem}
+footer h3{font-size:.9rem; color:var(--tx-1); margin-bottom:.5rem}
+footer a{color:var(--sig)}
+footer ul{margin:.4rem 0 0; padding-left:1.1rem}
+footer li{margin:.28rem 0; line-height:1.55}
+.src-2{color:var(--amb)}
+.tag-1{font-family:var(--mono); font-size:.68rem; border:1px solid rgba(74,222,155,.4); color:#c9ffe6; padding:.05rem .35rem; border-radius:4px; margin-right:.35rem}
+.tag-2{font-family:var(--mono); font-size:.68rem; border:1px solid rgba(251,191,36,.4); color:#ffe9b8; padding:.05rem .35rem; border-radius:4px; margin-right:.35rem}
+.reveal{opacity:0; transform:translateY(16px); transition:opacity .55s, transform .55s cubic-bezier(.2,.8,.2,1)}
+.reveal.in{opacity:1; transform:none}
+.byline{color:var(--tx-3); font-size:.8rem; margin-top:1.1rem; font-family:var(--mono)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important; transition-duration:.001ms!important}}
+@media print{ body::before{display:none} .top{position:static} .reveal{opacity:1;transform:none} }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="wrap top-in">
+    <div class="logo"><span class="logo-note"></span><span>数据质量 × 大模型</span></div>
+    <nav id="nav">
+      <a href="index.html" style="color:var(--sig);font-weight:700">⌂ 首页</a>
+      <a href="#tldr">结论</a>
+      <a href="#mech">机制</a>
+      <a href="#def">定义</a>
+      <a href="#pipe">流水线</a>
+      <a href="#cases">案例</a>
+      <a href="#roi">投入产出</a>
+      <a href="#limits">边界</a>
+      <a href="#playbook">清单</a>
+      <a href="#glossary">术语</a>
+      <a href="#sources">出处</a>
+    </nav>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <!-- ================= HERO ================= -->
+  <section class="hero">
+    <span class="eyebrow">DATA-CENTRIC AI · 深度解读</span>
+    <h1>数据质量优化，<br>到底给大模型<span class="g">带来了什么价值</span>？</h1>
+
+    <p class="lede">
+      把"数据要干净"这句口号拆成可计量的三层账：它<b>改写缩放律的下界</b>（模型最多能多好）、
+      <b>决定同样算力买到多少能力</b>（花多少钱达到同一分数）、也<b>划定模型永远学不会的边界</b>（分布里没有的东西学不出来）。
+      下面这条主线依次回答：机制上为什么有效 → 质量怎么被定义和度量 → 工程上怎么变成工序 →
+      案例里兑现了多少 → 投入产出怎么算 → 什么情况下它会失效。
+    </p>
+    <div class="stats">
+      <div class="stat s1"><div class="n">20<small>tokens / 参数</small></div><div class="l">Chinchilla 之后的经验最优配比（复现研究给出 17–22 的区间）</div></div>
+      <div class="stat s2"><div class="n">≈10×<small>token 效率</small></div><div class="l">FineWeb-Edu：38B token 达到对照数据集 300B token 的 MMLU 水平</div></div>
+      <div class="stat s3"><div class="n">1,000<small>条样本</small></div><div class="l">LIMA：65B 模型仅用 1,000 条精选样本，300 个测试 prompt 中 43% 的回答被评为不差于 GPT-4</div></div>
+    </div>
+    <div class="pills">
+      <span class="pill g">缩放律的不可约损失 E</span>
+      <span class="pill g">去重 · 过滤 · 配比</span>
+      <span class="pill i">数据-模型匹配</span>
+      <span class="pill i">等效算力节省</span>
+      <span class="pill a">过度过滤的代价</span>
+      <span class="pill a">合成数据自噬</span>
+      <span class="pill">评测污染</span>
+      <span class="pill">质量 = 单位 token 的有效梯度</span>
+    </div>
+    <div class="byline">单文件 · 无外部请求 · 关键数字均标注一手/二手来源（见页脚「出处与核验」）</div>
+  </section>
+
+  <!-- ================= TL;DR ================= -->
+  <section id="tldr" class="reveal">
+    <div class="sec-head">
+      <span class="sec-idx">00</span>
+      <h2>先给结论：六句话讲完</h2>
+      <p>如果只看一屏，看这六条。它们也是后面所有章节的骨架。</p>
+    </div>
+    <div class="grid g3">
+      <div class="card sig"><span class="kicker">01 · 它改动的是缩放律</span><h3>质量不是"锦上添花"，它改的是常数项</h3><p>缩放律里那个降不下去的<b>不可约损失 E</b>，本质由数据决定。清洗、去重、筛选的真正作用，是把这条曲线整体往下推，而不是单纯把训练拉长。</p></div>
+      <div class="card sig"><span class="kicker">02 · 数据墙之后唯一的杠杆</span><h3>同样的数据重复喂，收益会衰减</h3><p>在高质量语料稀缺、重复训练不可避免的今天，"更多"的边际收益在下降，而"更好"的边际收益还存在。但两者不能互相替代：实验显示重复 ≤4 个 epoch 时损失变化可忽略、再往上加算力的价值衰减到零；而重复导致退化时，<b>换成更高质量的数据也救不回来</b>。</p></div>
+      <div class="card sig"><span class="kicker">03 · 它可以换算成钱</span><h3>用更少 token 达到同一分数</h3><p>数据优化的产出可以写成"等效算力倍数"：同样的评测分数，优化后的数据配方只需要原配方的一部分算力，差的就是省下的 GPU 小时。</p></div>
+      <div class="card ind"><span class="kicker">04 · 质量是相对量</span><h3>对谁、为什么能力而优？</h3><p>质量没有绝对标准：小模型消化不了噪声，大模型吃不饱"太简单"的数据。脱离目标能力与模型规模谈质量，等于没有指标。</p></div>
+      <div class="card amb"><span class="kicker">05 · 最大的风险是洗过头</span><h3>过滤器会连同长尾一起删掉</h3><p>实证是双向的：主过滤对低资源语种多数有益，但启发式过滤收益不稳定甚至有害；脚本过滤会误删混写样本。<b>更严的过滤常常换来更高分与更差的行为安全</b>，且损失往往几轮之后才暴露。</p></div>
+      <div class="card dan"><span class="kicker">06 · 最终裁判是评测</span><h3>污染的测试集会让"提升"变成自欺</h3><p>如果测试样本早就在训练语料里，任何数据质量改进的结论都不可信。干净评测集与干净训练数据同等重要。</p></div>
+    </div>
+  </section>
+
+  <!-- ================= 机制 ================= -->
+  <section id="mech" class="reveal">
+    <div class="sec-head">
+      <span class="sec-idx">01</span>
+      <h2>机制：为什么"数据更好"能等价于"算力更多"</h2>
+      <p>缩放律给出的是"投入—损失"的经验曲线。数据质量之所以有价值，是因为它同时作用在曲线的三个位置上。</p>
+    </div>
+
+    <div class="formula">
+      L(C) = <span class="term-e">E</span> + <span class="term-n">A</span>·N<sup>-α</sup> + <span class="term-d">B</span>·D<sup>-β</sup>
+      <small>N=参数量，D=数据量（token），C≈6ND 为训练算力。<span class="term-e">E：不可约损失（数据决定的下界）</span> · <span class="term-n">A：模型侧系数</span> · <span class="term-d">B：数据侧系数</span></small>
+    </div>
+
+    <div class="grid g3" style="margin-top:.85rem">
+      <div class="card"><span class="kicker">机制 A · 信噪比</span><h3>噪声样本给出互相冲突的梯度</h3><p>乱码、模板残留、机器翻译腔、事实错误的段落，会让模型在同一个上下文里学到互相矛盾的目标。结果不是"学不会"，而是<b>把容量与算力花在了拟合噪声上</b>——表现为同样步数下损失下降更慢、泛化更差。</p></div>
+      <div class="card"><span class="kicker">机制 B · 去重</span><h3>重复内容等于偷偷改了权重</h3><p>语料里的重复文档，在梯度层面等价于给这部分内容<b>加权</b>。模型因此更倾向于逐字记忆而不是抽象规律；去重的直接收益是"同分数用更少训练步数"，次要收益是降低逐字复现与隐私泄露风险。子串级去重的经典结果显示，模型输出记忆文本的频率可降低约 <b>10 倍</b>，同时消掉了标准验证集中超过 4% 的训练-测试重叠（Lee et al., ACL 2022）。</p></div>
+      <div class="card"><span class="kicker">机制 C · 配比</span><h3>分布决定算力花在哪里</h3><p>各领域的边际收益不同，最优混合比例还会随模型规模与训练阶段改变。配比做得好，等于把同样的 FLOPs 从"已经学会的部分"搬到"还不会的部分"，这是数据侧最纯粹的效率收益。</p></div>
+    </div>
+
+    <div class="lab" style="margin-top:.9rem">
+      <div class="lab-in">
+        <div class="lab-chart">
+          <h3>把"质量投入"拧到缩放律上：等效算力换算器</h3>
+          <p class="sub">拖动滑块模拟数据质量改进的幅度，观察损失曲线整体下移，以及"达到同一损失所需算力"的倍数变化。</p>
+          <svg class="chart" id="chart" viewBox="0 0 560 300" role="img" aria-label="缩放律曲线示意"></svg>
+          <div class="legend">
+            <span><i style="background:#818CF8"></i>基线数据配方</span>
+            <span><i style="background:#4ADE9B"></i>质量优化后的配方</span>
+            <span><i style="background:rgba(255,255,255,.35)"></i>同一损失水平</span>
+          </div>
+        </div>
+        <div class="lab-side">
+          <div class="ctl">
+            <label>质量投入强度<span><b id="qv">0.50</b></span></label>
+            <input type="range" id="q" min="0" max="1" step="0.01" value="0.5">
+            <label style="font-size:.75rem;color:var(--tx-3)">0 = 原始语料，1 = 极端筛选（收益递减同时多样性风险上升）</label>
+          </div>
+          <div class="readout">
+            <div class="big" id="saving">—</div>
+            <div class="cap" id="savingCap">等效算力节省</div>
+            <div class="rows">
+              <div><span>不可约损失 E</span><b id="rE">—</b></div>
+              <div><span>同算力下的损失下降</span><b id="rD">—</b></div>
+              <div><span>多样性 / 长尾风险</span><b id="rR" class="risk">—</b></div>
+            </div>
+          </div>
+          <div class="callout">
+            <b>这只是示意模型，不是实测数据。</b>它演示的是论文里反复出现的定性结论：数据质量改动的是 <code>E</code>（下界）与 <code>B</code>（数据效率系数），因此曲线<b>整体下移</b>而不是沿同一条曲线滑动。真实数值必须用你自己的消融实验拟合。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout" style="margin-top:.9rem">
+      <b>这不是新观点——2020 年就这么干了：</b>GPT-3 的训练配比<b>并非按数据集大小比例采样</b>：Common Crawl 有 410B token，训练时只过了 <b>0.44 个 epoch</b>；WebText2（19B token）过了 2.9 个；Wikipedia（3B token）过了 3.4 个。论文原话是"我们视为更高质量的数据集被更频繁地采样……本质上是接受少量过拟合，以换取更高质量的训练数据"。换句话说：<b>按质量加权、主动接受重复训练，是十多年前就已经确立的默认策略</b>，今天的"数据质量工程"只是把它做得更精细、更可度量。
+    </div>
+
+    <div class="grid g3" style="margin-top:.9rem">
+      <div class="card ind">
+        <span class="kicker">更强的说法 · 数据剪枝</span>
+        <h3>数据选择可以"击败幂律"，但前提是度量足够准</h3>
+        <p>Sorscher 等（2022）主张用剪枝改写缩放曲线：按可学习性分数选数据，可用显著更少的数据达到同样性能。但同一工作给出了残酷的下界——当剪枝度量不完美时（夹角 10° / 20°），最多只能保留 <b>24% / 46%</b> 的数据才不损失性能。更反直觉的是剪枝策略随数据量<b>反转</b>：数据充足时保留最难的样本，数据稀缺时反而应保留最简单的。</p>
+      </div>
+      <div class="card amb">
+        <span class="kicker">约束条件 · 数据受限</span>
+        <h3>重复训练有上限，而且上限不固定</h3>
+        <p>在最多 400 次训练、9B 参数、900B token 的规模上，重复 <b>≤4 个 epoch</b> 相对唯一数据的损失变化可忽略，之后新增算力的价值衰减到零；参数越大衰减越快，所以数据受限时应优先增加 epoch 而不是加大模型。但后续研究给出反例：小数据集重复 256 轮时显著退化，且换用更高质量的数据也无法缓解——2025 年的理论进一步指出"可重复上限"取决于数据集<b>绝对规模</b>，而非固定的 4 轮。</p>
+      </div>
+      <div class="card sig">
+        <span class="kicker">把质量写进缩放律</span>
+        <h3>质量可以被建模，但结论有适用规模</h3>
+        <p>有研究把"有效数据量"写成随<b>多样性</b>与<b>合成比例</b>指数缩放的项，与真实准确率的相关性达 <b>0.83</b>；另一项 2,000+ 模型的大规模实证发现，去重、启发式过滤与 LLM 改写会同时改变缩放律的<b>系数与指数</b>，最优 token/参数比因干预手段不同而相差数量级。但该建模研究的规模是 25M–1.5B 参数，且观察到参数量超过约 1.5B 后<b>总量重新占主导</b>——小模型上的数据质量结论，不能直接外推到大模型。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 定义 ================= -->
+  <section id="def" class="reveal">
+    <div class="sec-head">
+      <span class="sec-idx">02</span>
+      <h2>定义：把"质量"拆成可度量的四层与五维</h2>
+      <p>"高质量数据"在不同团队口中含义完全不同。工程上必须把它拆到能写进验收标准的粒度。</p>
+    </div>
+
+    <div class="callout" style="margin-bottom:.9rem">
+      <b>可操作定义：</b>数据质量 = 单位 token 带来的有效能力增量。
+      写成式子就是 <code>quality ≈ Δ能力 / Δtoken</code>。它有两个直接推论：① 质量必须相对于<b>目标能力</b>才有意义；
+      ② 已被模型掌握的内容，其增量趋近于零——这也是"重复数据收益递减"的另一种说法。
+    </div>
+
+    <div class="grid g4">
+      <div class="card"><span class="kicker">L1 · 可发布</span><h3>合规与安全</h3><ul><li>版权与许可（robots、许可清单）</li><li>个人隐私 PII 去除</li><li>有害内容与滥用风险</li><li>数据来源可追溯性与审计</li></ul></div>
+      <div class="card"><span class="kicker">L2 · 可训练</span><h3>形式可用</h3><ul><li>正文抽取正确（不混入导航/模板）</li><li>编码、语言、乱码识别</li><li>重复行、样板句、占位符剔除</li><li>长度与结构分布可控</li></ul></div>
+      <div class="card"><span class="kicker">L3 · 可学</span><h3>信息密度</h3><ul><li>知识密度与事实正确性</li><li>难度分布（不是越难越好）</li><li>跨文档去重（含改写与翻译重复）</li><li>教育/专业价值打分</li></ul></div>
+      <div class="card"><span class="kicker">L4 · 有用</span><h3>任务价值</h3><ul><li>与目标能力分布对齐（推理/代码/工具调用）</li><li>含推理链、多步解题、可验证答案</li><li>难度落在模型"最近发展区"</li><li>与环境/验证器可闭环</li></ul></div>
+    </div>
+
+    <div class="grid g2" style="margin-top:.9rem">
+      <div class="card">
+        <span class="kicker">五个正交维度</span>
+        <h3>质量向量，而不是一个分数</h3>
+        <ul>
+          <li><b>正确性</b>：事实、代码可运行、答案可验证</li>
+          <li><b>多样性</b>：主题、风格、语言、视角、长度</li>
+          <li><b>信息量／难度</b>：对当前模型仍有梯度信号</li>
+          <li><b>独立性</b>：与语料内其他样本不重复</li>
+          <li><b>对齐度</b>：与目标任务的分布距离</li>
+        </ul>
+        <p style="margin-top:.5rem">把质量压成单一标量（例如一个分类器分数）时，其余四维会被静默优化掉——这是绝大多数"数据质量事故"的根因。</p>
+      </div>
+      <div class="card amb">
+        <span class="kicker">三个反直觉</span>
+        <h3>常见误解</h3>
+        <ul>
+          <li><b>"质量 = 干净"</b>：干净只是 L2，清洗完的数据依然可能零信息量。</li>
+          <li><b>"质量是绝对属性"</b>：同一份数据对 1B 和对 70B 的价值完全不同，对小模型是噪声、对大模型是常识。</li>
+          <li><b>"质量高就可以少要量"</b>：多样性只能靠规模提供。过度筛选会把语料变成"同一批事实的各种说法"，模型随之变得窄而自信。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 流水线 ================= -->
+  <section id="pipe" class="reveal">
+    <div class="sec-head">
+      <span class="sec-idx">03</span>
+      <h2>工程：把质量变成九个可验收的工位</h2>
+      <p>点击任一工位，查看它的判据、常用手段、代价与典型失败模式。顺序即典型流水线顺序。</p>
+    </div>
+
+    <div class="rail" id="rail"></div>
+    <div class="panel" id="panel"></div>
+
+    <div class="grid g2" style="margin-top:.95rem">
+      <div class="card sig">
+        <span class="kicker">专题一 · 去重</span>
+        <h3>三级去重：成本差一个数量级，收益也差一个层级</h3>
+        <div class="tbl-wrap" style="margin-top:.5rem">
+          <table class="mini" style="min-width:430px">
+            <thead><tr><th>级别</th><th>抓什么</th><th>成本</th><th>风险</th></tr></thead>
+            <tbody>
+              <tr><td><b>精确</b></td><td>完全相同的文档/段落（哈希、后缀数组）</td><td class="num">低</td><td class="dim">漏掉轻微改写</td></tr>
+              <tr><td><b>近似</b></td><td>高重叠的 n-gram 重复（MinHash + LSH 等）</td><td class="num">中</td><td class="dim">阈值选择影响召回与误杀</td></tr>
+              <tr><td><b>语义</b></td><td>同义改写、翻译重复、同事实多表述（嵌入聚类）</td><td class="num">高</td><td class="dim">最容易误杀"同主题不同信息"</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="margin-top:.5rem">公开配方参考：FineWeb 用<b>文档 5-gram + 14 桶 × 8 哈希</b>（目标"至少 75% 相似"）；NeMo Curator 新版默认 <b>char_ngrams=24、20 bands、13 hashes/band</b>——band 越多、每 band 哈希越少，判定越严格。</p>
+        <p style="margin-top:.5rem">一个必须记住的反例：FineWeb 曾尝试<b>全局迭代去重</b>，结果最老的快照被删掉多达 90%，语料从约 36T 掉到 4T；而逐快照独立去重只掉到约 20T，<b>效果反而更好</b>——保留下来的 10% 质量差于被删掉的 90%（广告、关键词堆砌更多）。语义去重（SemDeDup）在视觉任务上可删掉约 50% 数据而性能几乎不降，去重自身成本约为训练的 1%。</p>
+      </div>
+      <div class="card ind">
+        <span class="kicker">专题二 · 质量打分</span>
+        <h3>启发式、轻量分类器、LLM 裁判的三层取舍</h3>
+        <ul>
+          <li><b>启发式规则</b>：零推理成本、可解释、可审计，但对"信息密度"几乎无感。</li>
+          <li><b>轻量分类器</b>（如 fastText 类）：全量语料可承受，需要少量标注或弱监督样本来定义"好"。</li>
+          <li><b>嵌入 / LLM 打分</b>：最贴近人类判断，可用于<b>蒸馏出一个廉价分类器</b>，而不是直接筛全量数据。</li>
+        </ul>
+        <p style="margin-top:.5rem">成本结构的标准做法：FineWeb-Edu 用 Llama-3-70B 给 <b>46 万条</b>样本打 0–5 教育性分，训练一个线性头（阈值 3 时验证 F1 <b>82%</b>），再用它给 <b>15T token</b> 全量打分——推理约 <b>6,000 H100 小时</b>。教师很贵、学生很便宜，钱要花在定义"好"上，而不是逐条问大模型。</p>
+      </div>
+    </div>
+
+    <div class="grid g2" style="margin-top:.85rem">
+      <div class="card"><span class="kicker">专题三 · 合成数据</span><h3>改写、自蒸馏与验证器</h3><p>合成数据是"用算力换数据"的手段：把低质但真实的原始文本改写为结构化、教学化的版本，或直接生成带验证信号的推理轨迹。关键不在于生成，而在于<b>验证</b>——可执行验证（代码跑通、答案对得上、工具调用成功）才是质量闭环，否则只是把噪声换了个说法。</p></div>
+      <div class="card"><span class="kicker">专题四 · 度量与验证</span><h3>数据配方要靠实验说话</h3><ul><li>小规模消融：固定算力，只换数据配方，看同预算下的损失/分数。</li><li>缩放律外推：用多档规模拟合，预测大数据预算下的排序是否稳定。</li><li>污染体检：n-gram 重叠、干净重写测试集、时间切片验证。</li><li>数据归因：定位某个能力来自哪部分数据（影响函数/消融桶）。</li></ul></div>
+    </div>
+  </section>
+
+  <!-- ================= 案例 ================= -->
+  <section id="cases" class="reveal">
+    <div class="sec-head">
+      <span class="sec-idx">04</span>
+      <h2>案例：数据质量兑现成了什么</h2>
+      <p>下表只收录能追到一手来源的做法与数字；每行的"等价效果"是该工作自己的对比口径，不是跨工作可比结论。</p>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>工作</th><th>数据侧做法</th><th>规模</th><th>结果（其自报口径）</th><th>可迁移的启示</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><b>DCLM</b><br><span class="dim">DataComp-LM</span></td>
+            <td>用统一竞赛框架搜索"模型式筛选"配方：从 DCLM-Pool（240T token / 200B 文档 / 370TB gzip）里按分类器打分选数据</td>
+            <td class="num">7B 模型<br>2.6T token</td>
+            <td>MMLU 5-shot <b>64%</b>，与使用更多算力的同期 7B 模型处在同一档</td>
+            <td>数据配方可以像模型架构一样被<b>系统搜索</b>，而不是靠手感</td>
+          </tr>
+          <tr>
+            <td><b>FineWeb-Edu</b></td>
+            <td>用 Llama-3-70B 给 46 万条样本打 0–5 教育性分，蒸馏出线性头（阈值 3 时验证 F1 82%），再给 15T token 全量打分（约 6,000 H100 小时）；<b>最终只保留 8%（约 1.3T token）</b></td>
+            <td class="num">1.71B 消融模型<br>28B / 350B token</td>
+            <td>MMLU：<b>38B token 达到对照数据集 300B token 的水平</b>（约 10× token 效率）；350B 消融上 MMLU 33%→37%、ARC 46%→57%</td>
+            <td>少量强模型标注 + 廉价分类器 = 一套可全量执行、可复现的"质量品味"</td>
+          </tr>
+          <tr>
+            <td><b>Nemotron-CC</b></td>
+            <td>明确指出 FineWeb-Edu / DCLM 的激进模型过滤"<b>以移除 90% 数据为代价</b>"、不适合长 token 训练；转而用 6.3T token（含大量 LLM 改写与合成）把内容补回来</td>
+            <td class="num">8B 模型<br>1T 与 15T token 两档</td>
+            <td>8B 训 1T token 时，其高质量子集 MMLU <b>比 DCLM 高 5.6</b>；全量 6.3T 与 DCLM 持平但<b>真实唯一 token 多 4 倍</b>；8B 训 15T（其中 7.2T 来自该集）优于 Llama 3.1 8B：MMLU <b>+5</b>、ARC-C +3.1、十项任务均值 +0.5</td>
+            <td>保留更多真实唯一 token，能在长程训练里换回更大收益；<b>过滤的收益要放到训练总预算里算，而不是只看单点分数</b></td>
+          </tr>
+          <tr>
+            <td><b>Cosmopedia</b></td>
+            <td>用 Mixtral-8x7B 生成 25B token 教科书式合成语料（>3000 万文件）</td>
+            <td class="num">25B token<br>（当时最大公开合成集）</td>
+            <td>作为合成语料基线的常被引用对象</td>
+            <td>合成数据的定位是<b>补分布</b>（补上真实语料稀缺的题型与结构），不是替代真实语料</td>
+          </tr>
+          <tr>
+            <td><b>Llama 3.1</b></td>
+            <td>配比被明确管理：约 50% 通用知识 / 25% 数学与推理 / 17% 代码 / 8% 多语言</td>
+            <td class="num">8B–405B</td>
+            <td>官方未提供"单一数据改动"的对照实验</td>
+            <td>配比本身是产品决策：<b>想让模型擅长什么，先看语料里占了多少</b></td>
+          </tr>
+          <tr>
+            <td><b>phi-1</b><br><span class="dim">Textbooks Are All You Need</span></td>
+            <td>用 6B token "教科书级"筛选代码 + 不到 1B 的<b>合成教科书数据</b>，再用 &lt;200M token 微调；论文自做去污染，在 87.95 万道题中剔除 4.25 万–35.4 万道疑似重叠题后结论仍成立</td>
+            <td class="num">1.3B 参数<br>&lt;7B token<br>8×A100 / 4 天</td>
+            <td>HumanEval pass@1 <b>50.6%</b>、MBPP 55.5%；对照 StarCoder（15.5B 参数 / 1T token）为 33.6% / 52.7%</td>
+            <td>论文自己的口径是"<b>模型小 10 倍、数据集小 100 倍</b>"——引用时请回到原口径，不要说成"对标 10 倍大模型"</td>
+          </tr>
+          <tr>
+            <td><b>SmolLM2</b><br><span class="dim">小模型数据派</span></td>
+            <td>1.7B 模型、约 <b>11T token</b> 过训练；网页数据按 <b>FineWeb-Edu 60% + DCLM 40%</b> 配比，代码设 10% 上限，另自建 FineMath / Stack-Edu / SmolTalk（理由是现有数据集"过小或低质"）</td>
+            <td class="num">1.7B<br>≈11T token</td>
+            <td>超过 Qwen2.5-1.5B 与 Llama 3.2-1B</td>
+            <td>小模型的上限很大程度由"<b>选了哪些公开数据集 + 怎么配比</b>"决定，自研清洗管线并非必需</td>
+          </tr>
+          <tr>
+            <td><b>LIMA</b></td>
+            <td>65B LLaMA，只用 <b>1,000 条精选指令样本</b>（约 75 万 token）做对齐，不做 RLHF</td>
+            <td class="num">1,000 条<br>≈750K token</td>
+            <td>300 个测试 prompt 中，回答被评为"不差于对方"的比例：对 GPT-4 <b>43%</b>、Claude 46%、Bard 58%、DaVinci003 65%；7B 同超参消融里，筛选过的 2,000 条比未筛选高 0.5 分（1–6 Likert）。同方向还有 Deita：仅 <b>6K SFT + 10K DPO</b> 即达 MT-Bench 7.55、AlpacaEval 90.06%</td>
+            <td>对齐阶段的数据质量可部分替代数量与 RLHF，但收益集中在"指令跟随风格"，不等于知识或推理能力提升</td>
+          </tr>
+          <tr>
+            <td><b>AlpaGasus</b></td>
+            <td>用打分模型给 Alpaca 的 52,002 条按准确度打分，阈值 4.5，筛出 <b>9,229 条（删掉 82.25%）</b></td>
+            <td class="num">9,229 / 52,002</td>
+            <td>在 Vicuna/Koala/WizardLM/Self-Instruct 四个开放式测试集上显著优于全量；13B 人工对比 63 胜 / 64 平 / 33 负；训练快 <b>5.7 倍</b>（80 分钟 → 14 分钟）。<b>但在 MMLU 等知识类基准上全量更高</b>（7B：38.78 vs 40.86）</td>
+            <td>"少而精"的收益出现在筛选目标对应的能力上；<b>筛选指标决定了收益会出现在哪里</b>，也会决定它在哪里消失</td>
+          </tr>
+          <tr>
+            <td><b>数据配比搜索</b><br><span class="dim">DoReMi / RegMix / Data Mixing Laws</span></td>
+            <td>用小模型代理搜索域权重：DoReMi 用 280M 代理为 8B 定权重；RegMix 用 512 个 1M 参数小模型（各训 1B token）拟合回归预测最优混合；Data Mixing Laws 用可预测的函数形式外推</td>
+            <td class="num">代理 1M–280M<br>目标 1B–8B</td>
+            <td>DoReMi：few-shot 平均 <b>+6.5 分</b>，达到基线准确率少用 <b>2.6×</b> 训练步；RegMix：64 个候选混合中最优，用约 <b>10%</b> 的算力追平 DoReMi；Data Mixing Laws：优化后的配比等效于默认配比<b>多训 48% 步数</b></td>
+            <td>配比是可搜索、可预测的工程变量；用小模型代理做配比搜索，是数据侧性价比最高的实验之一</td>
+          </tr>
+          <tr>
+            <td><b>长上下文数据</b><br><span class="dim">ProLong</span></td>
+            <td>两阶段各 20B token，把上下文从 64K 扩到 512K——仅为 Llama-3.1 长上下文数据预算的 <b>5%</b></td>
+            <td class="num">40B token</td>
+            <td>HELMET@128K 平均 <b>49.4</b>，高于 Llama-3.1-8B 的 46.5；长:短数据最佳比例 60:40；长数据来源 Books:Code = 1:1 最好（54.6）；SFT 中混入合成长指令数据有害（0%→55.7、10%→53.9、50%→43.3）</td>
+            <td>长上下文能力同样由数据配比决定；且"只看向大海捞针 / perplexity"会严重误导评估</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid g3" style="margin-top:.9rem">
+      <div class="card sig"><span class="kicker">共同点 1</span><h3>先解决"有没有"，再解决"好不好"</h3><p>所有案例的第一步都是去重与正文抽取这种"低垂果实"，收益最大且几乎无副作用。</p></div>
+      <div class="card ind"><span class="kicker">共同点 2</span><h3>用小模型做数据裁判</h3><p>成功的配方几乎都用一个小模型（或分类器）去近似"人类会怎么判断这份数据"，再全量应用。</p></div>
+      <div class="card amb"><span class="kicker">共同点 3</span><h3>收益需要可验证的评测</h3><p>案例都配有干净评测与同算力基线；缺少这两样时，数据质量的故事无法证伪，也就无法复用。</p></div>
+    </div>
+  </section>
+
+  <!-- ================= ROI ================= -->
+  <section id="roi" class="reveal">
+    <div class="sec-head">
+      <span class="sec-idx">05</span>
+      <h2>投入产出：三本账与一个决策树</h2>
+      <p>数据质量的收益不是"感觉更好"，它可以被折算成算力、人力与风险三类成本的对冲。</p>
+    </div>
+
+    <div class="grid g3">
+      <div class="card sig">
+        <span class="kicker">账本一 · 算力</span>
+        <h3>同等效果下的 token / FLOPs 节省</h3>
+        <p>把"达到同一评测分数所需的训练算力"作为统一货币：优化前的配方需要多少 GPU 小时，优化后需要多少，差额就是收益。</p>
+        <ul>
+          <li>通用换算：训练算力 ≈ 6 × 参数量 × token 数</li>
+          <li>数据侧系数改善 → 曲线整体下移 → 同分数更少算力</li>
+          <li>注意：省下来的算力若不投入新一轮实验，收益不会自动兑现</li>
+        </ul>
+        <div class="minibar" role="img" aria-label="数据处理算力占一次前沿训练运行的比例示意">
+          <span class="seg data" style="flex:1.6"></span><span class="seg train" style="flex:98.4"></span>
+        </div>
+        <div class="minilegend"><span>数据处理 ≈1.6%</span><span>一次前沿训练 run</span></div>
+        <p style="margin-top:.45rem; font-size:.8rem">FineWeb 整个数据处理项目约 <b>80,000 H100 小时</b>，对照一次约 500 万 GPU 小时的训练运行——<b>数据侧的账，通常比训练侧的账小两个数量级</b>。另一个可核验的口径：DCLM-7B 在 53 项任务上与 Llama 3 8B 相当，而训练算力<b>少 6.6 倍</b>；相对 MAP-Neo，MMLU 高 <b>6.6 个百分点</b>同时省 40% 算力（注意：同一篇论文里的两个"6.6"含义不同，网上常被混引）。</p>
+      </div>
+      <div class="card ind">
+        <span class="kicker">账本二 · 人力与流水线</span>
+        <h3>清洗成本 vs 训练成本</h3>
+        <p>数据流水线的钱花在三处：<b>工程与算力</b>（抽取、去重、分类器推理）、<b>标注与评审</b>（定义"好"、评估配方）、<b>反复实验</b>（消融）。</p>
+        <ul>
+          <li>分类器推理是可控的固定成本，随语料线性增长</li>
+          <li>人工评审贵在<b>定标准</b>，适合小样本、高杠杆</li>
+          <li>消融实验是唯一能把"数据好不好"变成数字的方式</li>
+        </ul>
+      </div>
+      <div class="card dan">
+        <span class="kicker">账本三 · 风险</span>
+        <h3>不投数据质量的隐性账单</h3>
+        <ul>
+          <li>评测污染 → 决策建立在虚高分数上，返工成本极高</li>
+          <li>版权/隐私问题 → 模型下架与合规成本</li>
+          <li>记忆化与逐字复现 → 品牌与法务风险</li>
+          <li>长尾能力缺失 → 上线后由用户发现，修复成本最贵</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="dtree">
+      <div class="dstep"><span class="i">1</span><div><div class="q">评测可信吗？</div><div class="a"><i>不可信</i> → 先修评测：污染体检 + 干净复测集。此时做任何数据优化都无法判定效果，属于无效投入。</div></div></div>
+      <div class="dstep"><span class="i">2</span><div><div class="q">固定算力、只换数据配方，分数会动吗？</div><div class="a"><em>会动</em> → 数据侧还有空间，值得继续投；<i>几乎不动</i> → 瓶颈更可能在算法、规模或后训练，先别在数据上加预算。</div></div></div>
+      <div class="dstep"><span class="i">3</span><div><div class="q">错误集中在知识盲区、格式与覆盖度上吗？</div><div class="a"><em>是</em> → 优先做抽取、去重、域覆盖与合成增密，收益路径清晰；<i>否（错在多步推理、交互与长程一致性）</i> → 需要的是环境反馈与推理轨迹数据，而不是更多网页文本。</div></div></div>
+      <div class="dstep"><span class="i">4</span><div><div class="q">语料已高度同质、长尾与低资源部分被反复剔除？</div><div class="a"><em>是</em> → 继续筛选的边际收益趋近于零，下一步应转向<b>多样性采集</b>与合成数据质量，而不是更严的过滤器。</div></div></div>
+      <div class="dstep red"><span class="i">✕</span><div><div class="q">触发红线就停下</div><div class="a">长尾留存率跌破下限、污染复测分数与主分数背离、去重误杀代表样本——出现任一情况，先回滚配方再谈优化。</div></div></div>
+    </div>
+
+    <div class="grid g2" style="margin-top:.95rem">
+      <div class="card sig"><span class="kicker">值得重投的信号</span><h3>什么时候数据质量是瓶颈</h3><ul><li>同算力下换配方就能显著改变分数（说明数据侧还有空间）</li><li>错误集中在知识盲区或特定格式，而非推理深度</li><li>目标能力的样本在语料里占比过低</li><li>已有可信评测与小规模代理实验能力</li></ul></div>
+      <div class="card amb"><span class="kicker">不值得重投的信号</span><h3>什么时候它不是瓶颈</h3><ul><li>目标能力靠的是算法/架构/后训练机制，而非数据分布</li><li>评测本身不可信，任何改动都无法判定好坏</li><li>需要的是环境交互与反馈闭环，静态语料再干净也补不上</li><li>数据已高度同质，继续筛选只是重复剔除同一批样本</li></ul></div>
+    </div>
+
+    <div class="callout" style="margin-top:.9rem">
+      <b>一句话的 ROI 判据：</b>如果"花一周做数据实验"能换来"少训一个数量级的 token 或显著改变能力分布"，它就值得；
+      如果数据改动无法在可信评测上被稳定观测，那它不是优化，只是信仰。
+      <br><br>
+      <b>两个可用的量级参考：</b>① 效率倍数 m 与盈亏平衡——一篇被广泛引用的立场文章提出：若数据配方带来 m 倍 token 效率，最多可以把 <code>1 − 1/m</code> 的算力预算挪到数据侧仍能打平（m=6 时约 83%）。这是<b>一阶近似</b>，不是精确结论。
+      ② FineWeb 整个数据处理项目约 <b>80,000 H100 小时</b>，约为一次 500 万 GPU 小时训练运行的 <b>1.6%</b>。
+      公开项目自报的效率倍数多在 6–8× 量级（FineWeb-Edu ≈7.9×、BeyondWeb ≈7.7×、OLMo 3 ≈6×），但这些数字口径不一、多为立场文章换算，<b>不可直接横比</b>。
+    </div>
+  </section>
+
+  <!-- ================= 边界 ================= -->
+  <section id="limits" class="reveal">
+    <div class="sec-head">
+      <span class="sec-idx">06</span>
+      <h2>边界与反面：质量优化会在哪里反咬一口</h2>
+      <p>这一节比前面更重要：数据质量的工作一旦做错，损失是<b>静默的、累积的、越训越难回头</b>的。</p>
+    </div>
+
+    <div class="grid g2">
+      <div class="card amb"><span class="kicker">风险 1 · 洗过头</span><h3>过滤器会连同长尾一起删掉，而且证据是双向的</h3><p>Nemotron-CC 团队直接点名：FineWeb-Edu、DCLM 这类激进模型过滤的代价是<b>移除约 90% 的数据</b>，并不适合长 token 训练。跨语言研究的结论同样是双向的：<b>主过滤</b>对低资源语种多数有益（宿务语 +12%），但<b>启发式过滤</b>收益不稳定甚至有害（SIB200 平均 0.63→0.50）；脚本过滤会误删阿拉伯语/拉丁字母混写的代码切换样本。Wikipedia 上约鲁巴语因精确去重丢掉近 <b>60%</b> 文章。另有研究转述的结论是：过滤更严格的数据集下游分数更高，但模型更可能生成有毒内容。</p></div>
+      <div class="card dan"><span class="kicker">风险 2 · 自噬</span><h3>合成数据的近亲繁殖</h3><p>Shumailov 等人在 <b>Nature（2024）</b>中证明递归训练于生成数据会导致模型崩溃，并主张这是生成模型的普遍现象；Gerstgrasser 等随即限定了它的适用条件——崩溃的真正分水岭是"<b>替换</b>旧数据"还是"<b>累积</b>保留真实数据与各代合成数据"，后者可以避免崩溃并给出与迭代次数无关的误差上界。所以工程上的反制条件不是"不用合成数据"，而是：<b>累积而非替换、保留真实数据锚点、用验证器与多样性约束过滤合成样本</b>。</p></div>
+      <div class="card dan"><span class="kicker">风险 3 · 自欺</span><h3>污染让分数虚高，但别把话说满</h3><p>最硬的证据来自 GPT-3 自己的清理实验：PIQA 有 <b>29%</b> 样本被标记为可能污染，清理后绝对下降 <b>3 个百分点</b>（相对 4%）；Winograd 标记 45%、清理后降 2.6%；LAMBADA 差异在 0.5% 以内。GSM1k 的干净重写版本上，最差的模型相对掉 <b>13%</b>，且"生成原题的概率"与落差相关（Spearman r²=0.32），但<b>前沿模型落差接近零</b>（GPT-4 仅 −0.7%）。论文自己也强调：所有模型仍能泛化，<b>污染很可能不是过拟合的全部原因</b>。另外，常用 n-gram 检测对<b>改写过的污染</b>假阴性很高——简单改写或翻译即可绕过；而受控实验显示，当源句与译文<b>同时</b>出现在训练语料中时，翻译 BLEU 最多可虚高 <b>30 分</b>，且 8B 模型的虚高幅度是 1B 的 2.5 倍。</p></div>
+      <div class="card"><span class="kicker">风险 4 · 错配</span><h3>优化了错误的维度</h3><p>把"平均文档质量分"当成目标函数，会得到一批干净、正确、却高度同质的文本；模型在基准上更稳，在真实长尾任务上更脆。<b>指标错了，优化越努力越糟。</b></p></div>
+    </div>
+
+    <div class="sec-head" style="margin-top:1.5rem">
+      <span class="sec-idx">06+</span>
+      <h2>争议清单：同一个问题，文献并不一致</h2>
+      <p>数据质量领域最容易犯的错，是把某一篇论文的结论当成普遍规律。下表列出五组真实存在的冲突——写方案时请按自己的数据预算与评测重新验证。</p>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>问题</th><th>一种结论</th><th>另一种结论</th><th>怎么理解</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><b>去重到底有没有用？</b></td>
+            <td>Lee 等（2021）：困惑度、训练步数、记忆化三重收益，逐字复现降低约 10 倍</td>
+            <td>后续工作报告去重未改善下游；FineWeb 发现<b>全局</b>去重几乎无提升，且删掉的那部分质量更高</td>
+            <td>差别在<b>粒度与范围</b>：子串级、逐快照去重有收益；跨快照的全局迭代去重会连带误伤</td>
+          </tr>
+          <tr>
+            <td><b>该保留哪些样本？</b></td>
+            <td>Sorscher 等：数据充足时保留<b>最难</b>的样本最有效</td>
+            <td>同一工作：数据稀缺时应保留<b>最易</b>的样本；而"筛掉 90% 反而更好"的结论也真实存在</td>
+            <td>剪枝策略依赖数据预算与度量准确性，<b>不存在通用最优</b>；换个数据规模结论就会反转</td>
+          </tr>
+          <tr>
+            <td><b>"少而精"是否全面更好？</b></td>
+            <td>AlpaGasus：9,229 条在四个开放式测试集上全面优于 52,002 条</td>
+            <td>同一篇论文：在 MMLU 等知识类基准上，<b>全量数据反而更高</b></td>
+            <td>收益出现在筛选目标对应的能力上；<b>筛选指标即收益边界</b></td>
+          </tr>
+          <tr>
+            <td><b>重复多少轮还安全？</b></td>
+            <td>Muennighoff 等：重复 ≤4 个 epoch 损失变化可忽略</td>
+            <td>Xue 等：小数据集重复 256 轮显著退化，且换更高质量数据也无法缓解；2025 年理论认为上限取决于数据集绝对规模</td>
+            <td>"4 轮"是特定规模下的经验点，不是常数；<b>数据越大越耐重复</b></td>
+          </tr>
+          <tr>
+            <td><b>高质量数据能替代规模吗？</b></td>
+            <td>phi 系列：小模型 + 精选/合成数据可超过参数与数据大得多的模型（论文口径：模型小 10 倍、数据小 100 倍）</td>
+            <td>Xue 等：重复场景下高质量数据救不回退化；质量缩放建模显示参数量超过约 1.5B 后<b>总量重新占主导</b></td>
+            <td>质量与数量更接近<b>乘法关系</b>而非替代关系：质量决定同样的量能买到多少，数量决定天花板在哪</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout warn" style="margin-top:.9rem">
+      <b>实践上的护栏：</b>① 每轮筛选都记录"漏斗留存率"与各维度分布变化，而不只是最终分数；
+      ② 为长尾/方言/低资源语言设<b>留存下限</b>，而不是让分类器自由裁量；
+      ③ 合成数据必须锚定真实数据比例，并经过验证器过滤；
+      ④ 所有评测结论必须在<b>干净测试集</b>上复现一次；
+      ⑤ 保留"坏数据对照组"，否则无法知道筛选是否真的起了作用。
+    </div>
+  </section>
+
+  <!-- ================= 清单 ================= -->
+  <section id="playbook" class="reveal">
+    <div class="sec-head">
+      <span class="sec-idx">07</span>
+      <h2>落地清单：从现在开始可以做的 12 件事</h2>
+      <p>勾选做自查。前 4 项是"低垂果实"，几乎零风险；中间 4 项需要实验能力；最后 4 项是长期护栏。</p>
+    </div>
+    <div class="todo" id="todo">
+      <div class="todo-bar">
+        <span class="cnt" id="todoCnt">0 / 12</span>
+        <span class="track"><span class="fill" id="todoFill"></span></span>
+      </div>
+      <div id="todoList"></div>
+    </div>
+
+    <div class="grid g4" style="margin-top:.95rem">
+      <div class="card"><span class="kicker">漏斗指标</span><h3>留存率</h3><p>每一级过滤前后保留了多少文档与 token。异常下降通常是规则阈值写错或分类器漂移。</p></div>
+      <div class="card"><span class="kicker">去重指标</span><h3>重复率</h3><p>文档级/段落级/子串级重复比例，以及去重前后的训练损失曲线对比。</p></div>
+      <div class="card"><span class="kicker">分布指标</span><h3>域与语言配比</h3><p>目标分布 vs 实际分布的偏移量，含长尾与低资源语种的留存下限。</p></div>
+      <div class="card"><span class="kicker">可信度指标</span><h3>污染重叠率</h3><p>训练语料与各评测集的 n-gram 重叠比例；同时维护一份"干净复测"分数。</p></div>
+    </div>
+  </section>
+
+  <!-- ================= 术语 ================= -->
+  <section id="glossary" class="reveal">
+    <div class="sec-head">
+      <span class="sec-idx">08</span>
+      <h2>术语速查：十个词看懂数据质量讨论</h2>
+      <p>跨团队沟通时最容易各说各话的十个概念，这里给出"一句人话 + 它在本文里的位置"。</p>
+    </div>
+    <div class="grid g3">
+      <div class="card"><h3>不可约损失 E</h3><p>无论怎么加算力都降不下去的那部分损失，由数据分布决定。它是"数据质量"在数学上最直接的落点。</p></div>
+      <div class="card"><h3>算力最优配比</h3><p>给定算力预算时，参数量与数据量的最优搭配。它让"该训多大、该喂多少"变成可计算的问题，也让数据不足变成硬约束。</p></div>
+      <div class="card"><h3>数据墙 / 数据受限</h3><p>高质量公开语料被用尽、必须重复训练同一批数据的阶段。此时"更好"的边际收益高于"更多"。</p></div>
+      <div class="card"><h3>去重（精确/近似/语义）</h3><p>三个成本层级：完全相同、高重叠、同义改写。去重既是质量手段，也是隐私与记忆化风险的治理手段。</p></div>
+      <div class="card"><h3>质量分类器</h3><p>用少量人工判断或强模型打分做教师，蒸馏出的廉价全量过滤器。它决定了语料的"品味"，也继承了教师的偏见。</p></div>
+      <div class="card"><h3>数据配比 / 混合律</h3><p>各领域在训练集中占多少。最优配比随模型规模与训练阶段变化，属于"用算力分配换能力"的杠杆。</p></div>
+      <div class="card"><h3>合成数据 / 自蒸馏</h3><p>用模型生成或改写训练语料，等于用算力换数据。成立的前提是可验证与多样性，否则只是换了说法的噪声。</p></div>
+      <div class="card"><h3>模型崩溃</h3><p>递归使用自身输出训练导致分布尾部逐代塌缩的退化现象。学界对"是否必然"仍有争论，真实数据锚定与验证器是主要护栏。</p></div>
+      <div class="card"><h3>数据污染 / 泄漏</h3><p>评测样本出现在训练语料中，使分数虚高。它会让整个数据质量项目的结论失去意义，因此必须常规体检。</p></div>
+      <div class="card"><h3>等效算力</h3><p>把数据质量收益折算成"同分数所需算力倍数"的口径。它是让数据工作与算力预算在同一张表上比价的通用货币。</p></div>
+    </div>
+  </section>
+
+  <!-- ================= 出处 ================= -->
+  <footer id="sources">
+    <h3>出处与核验</h3>
+    <p style="margin:.2rem 0 .7rem">
+      <span class="tag-1">一手</span>= 论文/官方文档/官方博客；<span class="tag-2">二手</span>= 媒体或第三方转述（数字已在正文中标注不确定性）。
+      本页所有交互图形均为<b>示意模型</b>，用于表达定性结论，不代表任何实测数值。
+    </p>
+    <ul>
+      <li><span class="tag-1">一手</span><a href="https://arxiv.org/abs/2406.17557" target="_blank" rel="noopener">The FineWeb Datasets: Decanting the Web for the Finest Text Data at Scale</a> — trafilatura 从 WARC 抽取、fastText ≥0.65、MinHash 14×8、自研三过滤器删除比例、逐快照去重、消融方法学与 80,000 H100 小时。</li>
+      <li><span class="tag-1">一手·源码</span><a href="https://github.com/huggingface/datatrove/blob/main/src/datatrove/pipeline/filters/gopher_quality_filter.py" target="_blank" rel="noopener">datatrove · gopher_quality_filter.py</a> — Gopher 类启发式阈值的可执行实现（词数、平均词长、符号比、bullet 行、停用词）。</li>
+      <li><span class="tag-1">一手·源码</span><a href="https://github.com/huggingface/datatrove/blob/main/examples/minhash_deduplication.py" target="_blank" rel="noopener">datatrove · MinHash 去重示例</a> — num_buckets=14、hashes_per_bucket=8 的默认配置。</li>
+      <li><span class="tag-1">一手</span><a href="https://docs.nvidia.com/nemo/curator/curate-text/process-data/deduplication/fuzzy.html" target="_blank" rel="noopener">NeMo Curator · Fuzzy Deduplication 文档</a> — char_ngrams=24、20 bands、13 hashes/band 等新版权重默认值。</li>
+      <li><span class="tag-1">一手</span><a href="https://arxiv.org/abs/1911.00359" target="_blank" rel="noopener">CCNet: Extracting High Quality Monolingual Datasets from Web Crawl Data</a> — 段落级去重 + 语言识别 + KenLM 困惑度过滤的经典流水线。</li>
+      <li><span class="tag-1">一手</span><a href="https://arxiv.org/abs/2303.09540" target="_blank" rel="noopener">SemDeDup: Data-efficient learning at web-scale through semantic deduplication</a> — 语义去重可删约 50% 数据、训练成本减半，去重成本约为训练的 1%。</li>
+      <li><span class="tag-1">一手</span><a href="https://aclanthology.org/2022.acl-long.577.pdf" target="_blank" rel="noopener">Lee et al., ACL 2022 · Deduplicating Training Data Makes Language Models Better</a> — 记忆化输出降低约 10 倍、消除验证集中超过 4% 的训练-测试重叠。</li>
+      <li><span class="tag-1">一手·官方博客</span><a href="https://allenai.org/blog/dolma-3-trillion-tokens-open-llm-corpus-9a0ff4b8da64" target="_blank" rel="noopener">Dolma: 3 trillion tokens open LLM corpus</a> — URL/文档/段落三级去重与基于 Bloom filter 的污染检测（>13 token 段落）。</li>
+      <li><span class="tag-1">一手</span><a href="https://arxiv.org/abs/2406.11794" target="_blank" rel="noopener">DataComp-LM (DCLM): In Search of the Next Generation of Training Sets for Language Models</a> — DCLM-Pool 240T token、DCLM-Baseline 7B 用 2.6T token 达 MMLU 5-shot 64%。</li>
+      <li><span class="tag-2">官方博客</span><a href="https://developer.nvidia.com/blog/building-nemotron-cc-a-high-quality-trillion-token-dataset-for-llm-pretraining-from-common-crawl-using-nvidia-nemo-curator/" target="_blank" rel="noopener">NVIDIA · Building Nemotron-CC</a> — 6.3T token 语料、1.9T 变换 token、"找回高达 90% 内容"与自报 MMLU 对比（官方口径，非同行评审）。</li>
+      <li><span class="tag-2">官方博客</span><a href="https://huggingface.co/blog/cosmopedia" target="_blank" rel="noopener">Cosmopedia: 用 Mixtral 生成 25B token 合成教科书数据</a>。</li>
+      <li><span class="tag-1">一手</span><a href="https://www.nature.com/articles/s41586-024-07566-y" target="_blank" rel="noopener">Shumailov et al., Nature 2024 · AI models collapse when trained on recursively generated data</a>。</li>
+      <li><span class="tag-1">一手</span><a href="https://arxiv.org/abs/2405.00332" target="_blank" rel="noopener">GSM1k: A Careful Examination of Large Language Model Performance on Grade School Arithmetic</a> — 干净重写测试集上领先模型最多掉约 8 分，且与原题生成概率相关。</li>
+      <li><span class="tag-1">一手</span><a href="https://arxiv.org/abs/2411.05527" target="_blank" rel="noopener">How Good is Your Wikipedia? 多语言语料质量与过滤的双向影响</a> — 主过滤对低资源语种多数有益（宿务语 +12%），启发式过滤收益不稳定（SIB200 0.63→0.50），脚本过滤误删代码切换样本，约鲁巴语精确去重删近 60%。</li>
+      <li><span class="tag-1">一手</span><a href="https://arxiv.org/abs/2407.21783" target="_blank" rel="noopener">The Llama 3 Herd of Models</a> — Llama 3.1 数据配比约 50% 通用 / 25% 数学与推理 / 17% 代码 / 8% 多语言。</li>
+      <li><span class="tag-1">一手</span><a href="https://arxiv.org/abs/2504.12427" target="_blank" rel="noopener">Kandpal &amp; Raffel, ICML 2025 Position · The Data Provenance Tax</a> — 按"支付人工重造"口径估算，64 个 LLM 的数据集成本是训练成本的 10–1000 倍。</li>
+      <li><span class="tag-1">一手</span><a href="https://cdn.openai.com/papers/Training_language_models_to_follow_instructions_with_human_feedback.pdf" target="_blank" rel="noopener">InstructGPT</a> — 40 名标注员、约 33,000 条人类偏好比较的偏好数据规模与流程。</li>
+      <li><span class="tag-1">一手</span><a href="https://aclanthology.org/2023.findings-acl.780.pdf" target="_blank" rel="noopener">标注一致性门槛（Cohen's Kappa 0.6–0.8 的经验依据）</a>。</li>
+      <li><span class="tag-2">立场文章·换算</span><a href="https://huggingface.co/blog/maxidl/spend-compute-on-data" target="_blank" rel="noopener">Hugging Face Blog · Spend Compute on Data</a> — 6–8× 量级 token 效率倍数与盈亏平衡公式 <code>1 − 1/m</code>；作者自陈不同研究不可直接比较，倍数系其换算。</li>
+      <li><span class="tag-1">一手·源码</span><a href="https://github.com/google-research/deduplicate-text-datasets" target="_blank" rel="noopener">google-research/deduplicate-text-datasets</a> 与 <a href="https://github.com/ChenghaoMou/text-dedup" target="_blank" rel="noopener">text-dedup</a> — 子串级去重与多算法去重的开源实现。</li>
+      <li><span class="tag-1">一手</span><a href="https://arxiv.org/abs/2203.15556" target="_blank" rel="noopener">Hoffmann et al. 2022 · Training Compute-Optimal Large Language Models（Chinchilla）</a> — 400+ 模型、70M–16B 参数、5B–500B token；70B/1.4T 的 Chinchilla 胜过 280B/300B 的 Gopher，MMLU 67.5%。</li>
+      <li><span class="tag-1">一手</span><a href="https://arxiv.org/abs/2404.10102" target="_blank" rel="noopener">Besiroglu et al. 2024 · Chinchilla 复现</a> — 最优 token/参数比约 <b>17–22</b>（70B/1.4T 即 20）；原文"70 tokens/参数"的处方源于优化器早停导致的偏差。</li>
+      <li><span class="tag-1">一手</span><a href="https://arxiv.org/abs/2107.06499" target="_blank" rel="noopener">Lee et al. 2021 · Deduplicating Training Data Makes Language Models Better</a> — 无提示生成中 &gt;1% token 逐字来自训练集、去重后记忆化输出降低 10 倍、C4 中 ExactSubstr 删除 7.18% 训练 token（RealNews 19.4%）、验证集与训练集重叠 4.60%。</li>
+      <li><span class="tag-1">一手</span><a href="https://par.nsf.gov/biblio/10513497/media/xml" target="_blank" rel="noopener">Sorscher et al. 2022 · Beyond neural scaling laws: beating power law scaling via data pruning</a> — 剪枝策略随数据量反转；度量不完美时的保留下界（夹角 10°/20° → 24%/46%）；自监督度量下丢弃 20% ImageNet 不损性能。</li>
+      <li><span class="tag-1">一手</span><a href="https://arxiv.org/abs/2305.16264" target="_blank" rel="noopener">Muennighoff et al. 2023 · Scaling Data-Constrained Language Models</a> — 重复 ≤4 个 epoch 相对唯一数据损失变化可忽略；实验规模至 900B token、9B 参数、400 次训练。</li>
+      <li><span class="tag-1">一手</span><a href="https://arxiv.org/abs/2305.13230" target="_blank" rel="noopener">Xue et al. 2023 · To Repeat or Not To Repeat</a> — 小数据集重复 256 轮显著退化，且换用更高质量数据无法缓解；扩充数据规模则不退化。</li>
+      <li><span class="tag-1">一手</span><a href="https://arxiv.org/abs/2305.10429" target="_blank" rel="noopener">DoReMi</a>、<a href="https://arxiv.org/abs/2407.01492" target="_blank" rel="noopener">RegMix</a>、<a href="https://arxiv.org/abs/2403.16952" target="_blank" rel="noopener">Data Mixing Laws</a> — 用小模型代理搜索数据配比：+6.5 分 / 少用 2.6× 步数；512 个小模型预测最优混合；优化配比 ≈ 默认配比多训 48% 步数。</li>
+      <li><span class="tag-1">一手</span><a href="https://arxiv.org/abs/2306.11644" target="_blank" rel="noopener">Textbooks Are All You Need（phi-1）</a>、<a href="https://arxiv.org/abs/2404.14219" target="_blank" rel="noopener">Phi-3</a>、<a href="https://arxiv.org/abs/2412.08905" target="_blank" rel="noopener">Phi-4</a> — 1.3B/&lt;7B token 达 HumanEval 50.6%；phi-3-mini 3.8B/3.3T 达 MMLU 69%；Phi-4 称"训练配方以数据质量为中心"。</li>
+      <li><span class="tag-1">一手</span><a href="https://arxiv.org/abs/2305.11206" target="_blank" rel="noopener">LIMA: Less Is More for Alignment</a> 与 <a href="https://arxiv.org/abs/2312.15685" target="_blank" rel="noopener">Deita</a> — 1,000 条精选样本对 GPT-4 有 43% 回答"不差于对方"；Deita 仅 6K SFT + 10K DPO 达 MT-Bench 7.55、AlpacaEval 90.06%。</li>
+      <li><span class="tag-1">一手</span><a href="https://arxiv.org/abs/2307.08701" target="_blank" rel="noopener">AlpaGasus</a> — 52,002 → 9,229 条（删 82.25%），开放式测试集全面更好、训练快 5.7 倍，但 MMLU 等知识基准上全量更高。</li>
+      <li><span class="tag-1">一手</span><a href="https://arxiv.org/html/2502.02737v1" target="_blank" rel="noopener">SmolLM2</a> — 1.7B / 约 11T token 过训练，网页数据按 FineWeb-Edu 60% + DCLM 40% 配比，代码设 10% 上限；超过 Qwen2.5-1.5B 与 Llama 3.2-1B。</li>
+      <li><span class="tag-1">一手</span><a href="https://arxiv.org/html/2407.21783v3" target="_blank" rel="noopener">The Llama 3 Herd of Models</a> — 行级去重清除样板文本、n-gram 覆盖率与脏词计数做启发式过滤、fastText 覆盖 176 种语言 + 多语言质量分类器。</li>
+      <li><span class="tag-1">一手</span><a href="https://arxiv.org/abs/2410.02660" target="_blank" rel="noopener">ProLong · 长上下文数据配比</a> — 40B token 扩展到 512K，HELMET@128K 49.4 vs 46.5；长:短 = 60:40；SFT 混入合成长指令数据有害。</li>
+      <li><span class="tag-1">一手</span><a href="https://arxiv.org/abs/2410.03083" target="_blank" rel="noopener">把数据质量写进缩放律（有效数据量随多样性与合成度指数缩放）</a> — 与真实准确率相关性 0.83；规模 25M–1.5B 参数，超过约 1.5B 后总量重新占主导。</li>
+      <li><span class="tag-1">一手</span><a href="https://proceedings.iclr.cc/paper_files/paper/2026/hash/6544c0b53cc1ea51d0c7086b536830a8-Abstract-Conference.html" target="_blank" rel="noopener">ICLR 2026 · 数据质量干预对缩放律的影响（2,000+ 模型实证）</a> — 去重、启发式过滤与 LLM 改写会同时改变缩放律系数与指数，最优 token/参数比因干预手段相差数量级。</li>
+      <li><span class="tag-1">一手</span><a href="https://arxiv.org/abs/2112.11446" target="_blank" rel="noopener">Gopher（Rae et al. 2021）附录 A.1.1</a> 与 <a href="https://arxiv.org/abs/1910.10683" target="_blank" rel="noopener">T5/C4（Raffel et al. 2019）</a> — 启发式过滤阈值的原始出处。注意：这两篇只给出<b>定性</b>结论（"显著改善下游表现"），<b>没有可引用的百分比</b>。</li>
+      <li><span class="tag-1">一手</span><a href="https://arxiv.org/abs/2005.14165" target="_blank" rel="noopener">GPT-3（Brown et al. 2020）</a> — 质量加权的早期证据：Common Crawl 410B token 只过 0.44 个 epoch，Wikipedia 过 3.4 个；过滤用逻辑回归分类器（45TB → 570GB，约 400B token），而非 fastText。</li>
+      <li><span class="tag-1">一手</span><a href="https://arxiv.org/abs/2404.01413" target="_blank" rel="noopener">Gerstgrasser et al. 2024 · Is Model Collapse Inevitable?</a> — 崩溃源于"新数据替换旧数据"的假设；改为<b>累积</b>真实数据与各代合成数据即可避免，测试误差有与迭代次数无关的有限上界。</li>
+      <li><span class="tag-1">一手</span><a href="https://aclanthology.org/2025.acl-long.123/" target="_blank" rel="noopener">Nemotron-CC（ACL 2025）</a> — 6.3T token；"激进模型过滤以移除 90% 数据为代价"；8B/1T 时高质量子集 MMLU 比 DCLM 高 5.6，8B/15T 优于 Llama 3.1 8B（MMLU +5）。</li>
+      <li><span class="tag-1">一手</span><a href="https://aclanthology.org/2021.emnlp-main.98/" target="_blank" rel="noopener">Dodge et al. 2021 · Documenting Large Webtext Corpora</a> — 评测输入在 C4 中的逐字命中率"从不足 2% 到超过 50%"；注意该文只做命中统计，<b>没有"污染导致涨分"的实验</b>。</li>
+      <li><span class="tag-1">一手</span><a href="https://arxiv.org/abs/2511.13421" target="_blank" rel="noopener">有效数据复用率理论（2025）</a> — "数据集越大越耐重复"，可重复上限随数据规模增长，而非固定 4 个 epoch。</li>
+      <li><span class="tag-1">一手</span><a href="https://arxiv.org/html/2411.03923v1" target="_blank" rel="noopener">ConTAM</a> 与 <a href="https://proceedings.mlr.press/v267/kocyigit25a.html" target="_blank" rel="noopener">机器翻译污染受控实验（ICML 2025）</a> — 污染带来的"估计性能增益"可达 HumanEval 18%、BBH 25%；翻译任务上 BLEU 最多虚高 30 分（8B 的虚高是 1B 的 2.5 倍）。</li>
+      <li><span class="tag-1">一手</span><a href="https://arxiv.org/abs/2311.06233" target="_blank" rel="noopener">Data Contamination Quiz（TACL）</a> — 用测验法估计污染比例：HumanEval 检出约 56%、DROP 约 43%、GSM8k-train 约 79%，远高于按公开报告值复算的结果。</li>
+    </ul>
+    <p style="margin-top:1rem">本页为纯静态单文件：无外部请求、无埋点、无字体下载；图表为手写 SVG/Canvas，清单状态仅保存在当前页面内。</p>
+    <p style="margin-top:.6rem">配套动态页 → <a href="数据质量研究动态-2025-2026.html">《数据质量研究动态：DeepSeek 与其他实验室 2025–2026 最新论文与消息》</a>（按实验室与主题筛选的时间轴，含出处分级）。</p>
+  </footer>
+</main>
+
+<script>
+/* ============================================================
+   1. 缩放律示意：L(C) = E + A*C^-alpha （含不可约损失，示意模型）
+   ============================================================ */
+(function(){
+  const svg = document.getElementById('chart');
+  const qEl = document.getElementById('q');
+  const qvEl = document.getElementById('qv');
+  const savingEl = document.getElementById('saving');
+  const capEl = document.getElementById('savingCap');
+  if(!svg) return;
+
+  const W=560,H=300,L=54,R=18,T=18,B=38;
+  const cMin=1, cMax=1e4;               // 横轴：训练算力（相对单位，对数轴）
+  const E0=1.70, A0=1.50, a=0.34;       // 基线：不可约损失 1.70（示意参数）
+  const refC=100;                       // 参考算力点（示意）
+
+  const x=c=>L+(Math.log10(c)-0)/(4)*(W-L-R);
+  const y=v=>T+(2.60-v)/(2.60-1.70)*(H-T-B);
+
+  const curve=(E,A)=>{let d='';for(let i=0;i<=140;i++){
+    const c=Math.pow(10,4*i/140);
+    const v=E+A*Math.pow(c,-a); d+=(i?'L':'M')+x(c).toFixed(1)+' '+y(v).toFixed(1);} return d;};
+
+  function draw(q){
+    const E1=E0-0.12*Math.pow(q,0.75);
+    const A1=A0*(1-0.45*Math.sqrt(q));
+    const baseLoss=E0+A0*Math.pow(refC,-a);
+    const impLoss=E1+A1*Math.pow(refC,-a);
+    const inner=(baseLoss-E1)/A1;
+    let ratio=1, ratioTxt;
+    if(inner>0 && inner<1){ const c1=Math.pow(inner,-1/a); ratio=refC/c1; }
+    ratioTxt = q<=0.001 ? '1.0×' : (ratio>0 && ratio<50 ? ratio.toFixed(1)+'×' : '>50×');
+
+    const gx=[1,10,100,1000,10000].map(c=>`<line x1="${x(c).toFixed(1)}" y1="${T}" x2="${x(c).toFixed(1)}" y2="${H-B}" stroke="rgba(255,255,255,.055)"/>
+      <text x="${x(c).toFixed(1)}" y="${H-B+16}" fill="rgba(255,255,255,.4)" font-size="10" text-anchor="middle" font-family="monospace">${c>=1000?(c/1000)+'k':c}</text>`).join('');
+    const gy=[1.8,2.0,2.2,2.4].map(v=>`<line x1="${L}" y1="${y(v).toFixed(1)}" x2="${W-R}" y2="${y(v).toFixed(1)}" stroke="rgba(255,255,255,.055)"/>
+      <text x="${L-8}" y="${(y(v)+4).toFixed(1)}" fill="rgba(255,255,255,.4)" font-size="10" text-anchor="end" font-family="monospace">${v.toFixed(1)}</text>`).join('');
+
+    let extra='';
+    if(q>0.02){
+      // 同算力下的损失下降（竖直标注）
+      extra+=`<line x1="${x(refC).toFixed(1)}" y1="${y(baseLoss).toFixed(1)}" x2="${x(refC).toFixed(1)}" y2="${y(impLoss).toFixed(1)}" stroke="#4ADE9B" stroke-width="1.4" stroke-dasharray="3 3"/>`;
+      extra+=`<circle cx="${x(refC).toFixed(1)}" cy="${y(baseLoss).toFixed(1)}" r="3.4" fill="#818CF8"/>`;
+      extra+=`<circle cx="${x(refC).toFixed(1)}" cy="${y(impLoss).toFixed(1)}" r="3.4" fill="#4ADE9B"/>`;
+      extra+=`<text x="${(x(refC)+8).toFixed(1)}" y="${((y(baseLoss)+y(impLoss))/2).toFixed(1)}" fill="#9ef3c8" font-size="10" font-family="monospace">−${(baseLoss-impLoss).toFixed(2)} loss</text>`;
+      // 同损失水平下的算力差距（水平标注）
+      if(ratio>1 && ratio<50){
+        extra+=`<line x1="${L}" y1="${y(baseLoss).toFixed(1)}" x2="${W-R}" y2="${y(baseLoss).toFixed(1)}" stroke="rgba(255,255,255,.28)" stroke-dasharray="4 4"/>`;
+        extra+=`<text x="${W-R-2}" y="${(y(baseLoss)-7).toFixed(1)}" fill="rgba(255,255,255,.5)" font-size="10" text-anchor="end">同一损失水平</text>`;
+      }
+    }
+    svg.innerHTML=`
+      ${gx}${gy}
+      <line x1="${L}" y1="${H-B}" x2="${W-R}" y2="${H-B}" stroke="rgba(255,255,255,.18)"/>
+      <line x1="${L}" y1="${T}" x2="${L}" y2="${H-B}" stroke="rgba(255,255,255,.18)"/>
+      <text x="${(L+W-R)/2}" y="${H-6}" fill="rgba(255,255,255,.42)" font-size="10" text-anchor="middle">训练算力（相对单位 · 对数轴）</text>
+      <text x="12" y="${(T+H-B)/2}" fill="rgba(255,255,255,.42)" font-size="10" text-anchor="middle" transform="rotate(-90 12 ${(T+H-B)/2})">验证损失 L</text>
+      <path d="${curve(E0,A0)}" fill="none" stroke="#818CF8" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="${curve(E1,A1)}" fill="none" stroke="#4ADE9B" stroke-width="2.4" stroke-linecap="round"/>
+      ${extra}
+    `;
+    qvEl.textContent=q.toFixed(2);
+    savingEl.textContent=ratioTxt;
+    capEl.textContent = q<=0.001 ? '未投入数据质量优化：基线配方'
+      : '达到同一损失水平，基线配方需要约 '+ratioTxt+' 算力';
+    document.getElementById('rE').textContent=E0.toFixed(2)+' → '+E1.toFixed(2);
+    document.getElementById('rD').textContent='−'+(baseLoss-impLoss).toFixed(3);
+    const risk=Math.round(100*Math.pow(q,1.4));
+    document.getElementById('rR').textContent=(risk<5?'≈0':risk+'%')+'（示意）';
+  }
+  qEl.addEventListener('input',()=>draw(parseFloat(qEl.value)));
+  draw(parseFloat(qEl.value));
+})();
+
+/* ============================================================
+   2. 九工位流水线
+   ============================================================ */
+(function(){
+  const STOPS=[
+    {no:'01',nm:'抓取与许可',tag:'来源层',
+     crit:['域名与 robots 合规、许可清单可追溯','时间切片与快照版本固定（可复现）','去重已抓取域名，避免同站过采样'],
+     tool:['自建爬虫 + 公共语料快照（可复现版本）','许可/来源登记表'],
+     cost:'带宽与存储随规模线性增长；快照版本管理是隐性成本。',
+     fail:'不做来源登记，导致后续无法回答"这段数据能不能用"；语料随时间漂移，实验结果不可复现。'},
+    {no:'02',nm:'正文抽取',tag:'结构层',
+     crit:['只保留主体内容，剔除导航、评论、广告、页脚','保留标题层级与代码块等结构信息','抽取失败样本要能被识别并单独处理'],
+     tool:['从 WARC 抽取而非 WET（WET 保留了过多样板文本）','trafilatura / jusText / resiliparse + 模板检测规则'],
+     cost:'CPU 密集但便宜；需要抽样人工验收。',
+     fail:'把模板文字混进正文，模型学到大量"点击这里/版权所有"；抽取失败率高的站点被整体降权却无人发现。'},
+    {no:'03',nm:'语言与编码',tag:'形式层',
+     crit:['语言识别置信度阈值 + 混合语言策略','残缺编码、乱码、单字符重复剔除','目标语种占比可控'],
+     tool:['fastText 语言识别（FineWeb 生产设置：保留 score ≥ 0.65）','编码探测与修复'],
+     cost:'极低，可全量跑。',
+     fail:'把相近语言混为一谈；把代码、公式、术语密集的专业文本误判为非目标语言而删除。'},
+    {no:'04',nm:'启发式过滤',tag:'规则层',
+     crit:['长度、平均词长、符号/词比、重复行比例、停用词比例','困惑度过滤（用一个小模型给文本打分）','规则必须可解释、可回滚'],
+     tool:['Gopher 规则（datatrove 实现）：词数 50–100k、平均词长 3–10、符号/词比 ≤0.1、bullet 行占比 ≤0.9、以省略号结尾行 ≤0.3、含字母词 ≥0.8、停用词 ≥2',
+           'C4 规则：终端标点过滤单项收益最大，但一次删掉约 30% token',
+           '自研规则示例（FineWeb）：句末标点行 ≤0.12（删 10.14%）、重复行字符占比 ≥0.1（删 12.47%）、短于 30 字符行占比 ≥0.67（删 3.73%）；三者合用删约 22%，聚合分 +约 1%'],
+     cost:'低；规则调参是人力成本。',
+     fail:'阈值抄来不改：换语种、换领域后大量误杀；把"短"等同于"低质"，删掉了对话与短文本能力的来源。'},
+    {no:'05',nm:'去重',tag:'独立性',
+     crit:['文档级 / 段落级 / 子串级三级粒度','近似重复的相似度阈值需按语料验证','保留代表样本而不是随机保留'],
+     tool:['MinHash + LSH（FineWeb：文档 5-gram、14 桶 × 8 哈希、目标 ≥75% 相似）、后缀数组做子串级去重','嵌入聚类做语义去重（SemDeDup：可删约 50% 数据，去重成本约为训练的 1%）'],
+     cost:'近似与语义去重的算力/内存开销显著，是流水线里最贵的一环之一。',
+     fail:'阈值过松漏掉改写重复；过紧把"同主题不同信息"删掉，语料多样性骤降；只做文档级去重会漏掉模板化段落。'},
+    {no:'06',nm:'质量打分',tag:'信息密度',
+     crit:['用少量人工标注或强模型判断定义"好"','分类器需按域评估，而不是全局一个阈值','分数用于排序与配额，而非一律二元切除'],
+     tool:['轻量分类器做全量打分（FineWeb-Edu：Llama-3-70B 标 46 万条 → 线性头，阈值 3 时 F1 82%；给 15T token 打分约 6,000 H100 小时）','嵌入模型 / LLM 裁判制作训练标签','教育价值类分类器'],
+     cost:'全量推理是固定成本；用 LLM 直接筛全量数据通常不经济。',
+     fail:'把"像百科"当成"有信息"：叙事、对话、经验类高价值数据被打低分；分类器继承训练数据偏见（非标准英语、方言被判低质）。'},
+    {no:'07',nm:'合成与改写',tag:'增密层',
+     crit:['每条合成样本必须可验证（答案/代码/工具结果）','真实数据保底比例、输出多样性约束','合成来源与真实来源可区分，便于消融'],
+     tool:['自蒸馏与受控改写（Cosmopedia 用 Mixtral 生成 25B token）','可执行验证器、拒绝采样','多样性与去重护栏（Nemotron-CC：6.3T 语料中 1.9T 为变换 token，官方称可"找回"清洗中流失的高达 90% 内容）'],
+     cost:'算力换数据：生成+验证的推理成本可能高于清洗成本。',
+     fail:'未验证的合成数据只是把噪声换了说法；反复用自己输出训练导致分布尾部塌缩（近亲繁殖）。'},
+    {no:'08',nm:'配比与课程',tag:'分布层',
+     crit:['定义各域权重并按阶段调整（课程）','监控各域损失与梯度尺度，避免相互挤压','对高价值但稀缺的域做上采样要设上限'],
+     tool:['域权重/温度采样、混合律拟合','分阶段课程（先通用后专业）'],
+     cost:'实验成本高：配比必须靠消融来定。',
+     fail:'一套配比用到所有规模：小模型与大模型的最优配比不同；上采样过度导致特定域过拟合与灾难性遗忘。'},
+    {no:'09',nm:'污染检测与打包',tag:'验收层',
+     crit:['训练语料与评测集的 n-gram 重叠体检','保留一份模型从未见过的干净复测集','打包时正确处理文档边界与注意力掩码'],
+     tool:['n-gram/子串重叠检测（Dolma 用 Bloom filter 检查评测集中长度 >13 token 的任意段落是否出现）','干净重写测试集（如 GSM1k：领先模型最多掉约 8 分）'],
+     cost:'低，但必须制度化、每轮都跑。',
+     fail:'污染未被发现，数据质量改进的结论全是假的；打包把多篇文档拼成一条样本，模型学到"跨文档拼接"这种不存在的任务。'}
+  ];
+  const rail=document.getElementById('rail'), panel=document.getElementById('panel');
+  if(!rail) return;
+  rail.innerHTML=STOPS.map((s,i)=>`<button class="stop${i===0?' on':''}" data-i="${i}">
+      <span class="no">${s.no}</span><span class="nm">${s.nm}</span><span class="tag">${s.tag}</span></button>`).join('');
+  function render(i){
+    const s=STOPS[i];
+    panel.innerHTML=`
+      <div class="ph"><span class="badge">${s.no}</span><h3>${s.nm}</h3><span class="badge">${s.tag}</span></div>
+      <div class="cols">
+        <div><h4>验收判据</h4><ul>${s.crit.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+        <div><h4>常用手段</h4><ul>${s.tool.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+        <div><h4>代价</h4><p style="margin:0">${s.cost}</p><h4>典型失败模式</h4><p style="margin:0">${s.fail}</p></div>
+      </div>`;
+  }
+  rail.addEventListener('click',e=>{
+    const b=e.target.closest('.stop'); if(!b) return;
+    rail.querySelectorAll('.stop').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on'); render(+b.dataset.i);
+  });
+  render(0);
+})();
+
+/* ============================================================
+   3. 清单
+   ============================================================ */
+(function(){
+  const ITEMS=[
+    ['先量再改','统计文档级/段落级重复率与各级过滤留存率，建立基线。今天的删除量就是明天的对比组。'],
+    ['做一次污染体检','把评测集与训练语料做 n-gram 重叠扫描，把有问题的样本列出来并重建干净复测集。'],
+    ['统一数据版本','给每份语料打不可变版本号与来源登记，让"这次提升来自哪版数据"可回答。'],
+    ['建立漏斗看板','按域/语言看留存率与分布变化，任何一级异常下降都能被立刻发现。'],
+    ['小规模消融制度化','固定算力预算，只换数据配方，跑同一条评测；没有这一步，所有数据改动都是猜。'],
+    ['训练一个自己的质量分类器','用少量人工标注或强模型打分做教师，蒸馏出可全量运行的廉价分类器。'],
+    ['给长尾设留存下限','为方言、低资源语言、口语与专业长尾设置最低保留配额，防止被分类器整体删除。'],
+    ['为合成数据加验证器','只有能通过可执行验证（答案/代码/工具结果）的合成样本才进入训练集，并保留真实数据锚定比例。'],
+    ['建立等效算力口径','把数据收益统一折算成"同分数所需算力倍数"，让数据工作与算力预算在同一张表上比价。'],
+    ['保留坏数据对照组','留一小份未清洗语料作为对照，验证筛选确实有效而非心理安慰。'],
+    ['分阶段课程化配比','先通用后专业，按训练阶段调整域权重，并监控各域损失是否互相挤压。'],
+    ['把质量写进验收标准','把 L1-L4 四层判据变成流水线的硬性闸门与自动化测试，而不是文档里的口号。']
+  ];
+  const list=document.getElementById('todoList'), cnt=document.getElementById('todoCnt'), fill=document.getElementById('todoFill');
+  if(!list) return;
+  list.innerHTML=ITEMS.map(([t,d],i)=>`<div class="todo-item" data-i="${i}">
+      <span class="box">✓</span><span class="tx">${t}<span>${d}</span></span></div>`).join('');
+  const state=new Set();
+  function sync(){
+    cnt.textContent=state.size+' / '+ITEMS.length;
+    fill.style.width=(state.size/ITEMS.length*100)+'%';
+  }
+  list.addEventListener('click',e=>{
+    const it=e.target.closest('.todo-item'); if(!it) return;
+    const i=+it.dataset.i;
+    if(state.has(i)){ state.delete(i); it.classList.remove('done'); }
+    else{ state.add(i); it.classList.add('done'); }
+    sync();
+  });
+  sync();
+})();
+
+/* ============================================================
+   4. 入场与导航高亮
+   ============================================================ */
+(function(){
+  const io=new IntersectionObserver(es=>{
+    es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+  },{rootMargin:'-6% 0px -6% 0px', threshold:.05});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+  const links=[...document.querySelectorAll('#nav a')];
+  const secs=links.map(a=>document.querySelector(a.getAttribute('href'))).filter(Boolean);
+  const mark=()=>{
+    let cur=null;
+    secs.forEach(s=>{ if(s.getBoundingClientRect().top<=140) cur=s.id; });
+    links.forEach(a=>a.classList.toggle('on', a.getAttribute('href')==='#'+cur));
+  };
+  addEventListener('scroll',mark,{passive:true}); mark();
+})();
+</script>
+</body>
+</html>

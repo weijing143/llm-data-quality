@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>数据质量 × 大模型 · 研究阅读项目</title>
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#07090f; --bg-2:#0b0e16; --bg-3:#11151f; --bg-4:#171c28;
+  --tx-0:rgba(255,255,255,.96); --tx-1:rgba(255,255,255,.80);
+  --tx-2:rgba(255,255,255,.58); --tx-3:rgba(255,255,255,.36);
+  --brd:rgba(255,255,255,.10); --brd-2:rgba(255,255,255,.20);
+  --sig:#4ADE9B; --ind:#818CF8; --amb:#FBBF24; --dan:#FB7185; --cy:#22D3EE;
+  --r-m:10px; --r-l:16px; --r-xl:24px; --r-full:9999px;
+  --ui:"Inter","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono","Cascadia Code",Consolas,"SF Mono",monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--tx-0);
+  font-family:var(--ui); font-size:15px; line-height:1.68;
+  -webkit-font-smoothing:antialiased; overflow-x:hidden;
+}
+a{color:inherit; text-decoration:none}
+.wrap{width:min(1080px,100% - 2.2rem); margin-inline:auto}
+h1,h2,h3{letter-spacing:-.022em; margin:0}
+b,strong{font-weight:750; color:#fff}
+body::before{
+  content:""; position:fixed; inset:-30vh -10vw; z-index:-1; pointer-events:none;
+  background:
+    radial-gradient(40vw 34vw at 12% 2%, rgba(74,222,155,.12), transparent 62%),
+    radial-gradient(36vw 32vw at 88% 6%, rgba(34,211,238,.13), transparent 60%),
+    radial-gradient(30vw 30vw at 55% 44%, rgba(129,140,248,.07), transparent 65%);
+}
+.top{position:sticky; top:0; z-index:100; height:60px; background:rgba(7,9,15,.76);
+  backdrop-filter:blur(14px) saturate(160%); border-bottom:1px solid var(--brd)}
+.top-in{display:flex; align-items:center; gap:1rem; height:100%}
+.logo{display:flex; align-items:center; gap:.6rem; font-weight:800; white-space:nowrap; font-size:.94rem}
+.logo-note{width:24px; height:24px; border-radius:7px; flex:none; position:relative;
+  background:linear-gradient(135deg,var(--cy),var(--sig))}
+.logo-note::after{content:""; position:absolute; inset:7px 6px; border-radius:1.5px; background:var(--bg)}
+.top nav{display:flex; gap:.1rem; margin-left:auto}
+.top nav a{padding:.34rem .66rem; border-radius:var(--r-full); font-size:.82rem;
+  color:var(--tx-2); white-space:nowrap; transition:.2s}
+.top nav a:hover{color:var(--tx-0); background:rgba(255,255,255,.08)}
+
+.hero{padding:clamp(3rem,7vw,5rem) 0 1.6rem}
+.eyebrow{font-family:var(--mono); font-size:.74rem; letter-spacing:.16em; color:var(--cy);
+  display:inline-flex; align-items:center; gap:.5rem; margin-bottom:.9rem}
+.eyebrow::before{content:""; width:26px; height:1px; background:linear-gradient(90deg,var(--cy),transparent)}
+.hero h1{font-size:clamp(1.8rem,5vw,3.2rem); line-height:1.16; font-weight:850; text-wrap:balance}
+.hero h1 .g{background:linear-gradient(100deg,var(--cy) 5%,var(--sig) 60%,var(--ind) 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent}
+.hero .lede{max-width:70ch; color:var(--tx-1); margin:1.1rem 0 0}
+
+.stats{display:grid; gap:.7rem; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); margin-top:1.6rem}
+.stat{border:1px solid var(--brd); border-radius:var(--r-l); padding:.85rem 1rem;
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015))}
+.stat .n{font-family:var(--mono); font-size:1.3rem; font-weight:700; color:#fff}
+.stat .l{font-size:.79rem; color:var(--tx-2); margin-top:.25rem}
+
+.sec{margin:3.2rem 0}
+.sec h2{font-size:1.35rem; font-weight:800; margin-bottom:.4rem}
+.sec .sub{color:var(--tx-2); font-size:.9rem; margin-bottom:1.4rem}
+
+.cards{display:grid; gap:1rem; grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.card{
+  display:flex; flex-direction:column; border:1px solid var(--brd); border-radius:var(--r-xl);
+  padding:1.5rem 1.5rem 1.2rem; position:relative; overflow:hidden;
+  background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.012));
+  transition:transform .25s, border-color .25s;
+}
+.card:hover{transform:translateY(-4px); border-color:var(--brd-2)}
+.card::before{content:""; position:absolute; inset:0 0 auto; height:3px}
+.card.c1::before{background:linear-gradient(90deg,var(--sig),transparent)}
+.card.c2::before{background:linear-gradient(90deg,var(--cy),transparent)}
+.card.c3::before{background:linear-gradient(90deg,var(--amb),transparent)}
+.card .tag-row{display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:.9rem}
+.card .tag{font-family:var(--mono); font-size:.68rem; letter-spacing:.08em; padding:.18rem .55rem;
+  border-radius:var(--r-full); border:1px solid var(--brd-2); color:var(--tx-2)}
+.card.c1 .tag{border-color:rgba(74,222,155,.4); color:#c9ffe6}
+.card.c2 .tag{border-color:rgba(34,211,238,.4); color:#bff2fb}
+.card.c3 .tag{border-color:rgba(251,191,36,.4); color:#fde9b8}
+.card h3{font-size:1.12rem; font-weight:800; line-height:1.45; margin-bottom:.6rem}
+.card p{color:var(--tx-2); font-size:.88rem; margin:0 0 1.1rem; flex:1}
+.card .go{
+  font-family:var(--mono); font-size:.8rem; font-weight:700; letter-spacing:.05em;
+  display:inline-flex; align-items:center; gap:.45rem;
+}
+.card.c1 .go{color:var(--sig)} .card.c2 .go{color:var(--cy)} .card.c3 .go{color:var(--amb)}
+.card .go::after{content:"→"; transition:transform .2s}
+.card:hover .go::after{transform:translateX(4px)}
+
+.order{counter-reset:od; margin:0; padding:0}
+.order li{
+  list-style:none; counter-increment:od; position:relative; padding:.9rem 0 .9rem 3.2rem;
+  border-bottom:1px solid var(--brd); color:var(--tx-1); font-size:.92rem;
+}
+.order li:last-child{border-bottom:none}
+.order li::before{
+  content:counter(od,decimal-leading-zero); position:absolute; left:0; top:.95rem;
+  font-family:var(--mono); font-weight:700; font-size:.9rem; color:var(--sig);
+}
+.order b{color:#fff}
+
+footer{border-top:1px solid var(--brd); margin-top:4rem; padding:1.8rem 0 3rem;
+  color:var(--tx-3); font-size:.8rem; line-height:1.9}
+footer a{color:var(--tx-2); border-bottom:1px dotted var(--brd-2)}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="wrap top-in">
+    <div class="logo"><span class="logo-note"></span><span>数据质量 × 大模型</span></div>
+    <nav>
+      <a href="#reports">三份报告</a>
+      <a href="#order">阅读顺序</a>
+    </nav>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <section class="hero">
+    <span class="eyebrow">DATA-CENTRIC AI · READING PROJECT · 数据截至 2026-09-16</span>
+    <h1>数据质量 × 大模型：<br><span class="g">一个可阅读的研究项目</span></h1>
+    <p class="lede">
+      当算力与模型架构趋于同质化，<b>数据质量</b>成为拉开模型能力差距的核心变量。
+      本项目把这一主题的研究整理成三份互相衔接的单页报告：一份讲清<b>机制与价值</b>，
+      一份追踪<b>各实验室的最新动态</b>，一份汇总<b>近六个月的论文、政策与市场</b>。
+      所有页面均为单文件、无外部请求，关键数字标注来源。
+    </p>
+    <div class="stats">
+      <div class="stat"><div class="n">3<small>份报告</small></div><div class="l">框架解读 · 研究动态 · 半年汇总，互为补充</div></div>
+      <div class="stat"><div class="n">100+<small>条</small></div><div class="l">论文、技术报告、政策文件与市场数据出处</div></div>
+      <div class="stat"><div class="n">2026-09<small>更新</small></div><div class="l">研究动态数据截至 2026 年 9 月 16 日</div></div>
+    </div>
+  </section>
+
+  <section class="sec" id="reports">
+    <h2>三份报告</h2>
+    <p class="sub">点击卡片进入阅读；每页顶部导航可返回本首页。</p>
+    <div class="cards">
+
+      <a class="card c1" href="数据质量优化对大模型价值.html">
+        <div class="tag-row"><span class="tag">框架篇</span><span class="tag">机制 / 工程 / 投入产出</span></div>
+        <h3>数据质量优化，到底给大模型带来了什么价值？</h3>
+        <p>把"数据要干净"拆成可计量的三层账：改写缩放律的下界、决定同样算力买到多少能力、划定模型永远学不会的边界。含质量的四层定义、九个工程工位、案例兑现、三本账与落地清单。</p>
+        <span class="go">开始阅读</span>
+      </a>
+
+      <a class="card c2" href="数据质量研究动态-2025-2026.html">
+        <div class="tag-row"><span class="tag">动态篇</span><span class="tag">2025–2026 各实验室追踪</span></div>
+        <h3>数据质量研究动态：谁在做什么，做出了什么</h3>
+        <p>框架篇的配套动态页：DeepSeek 与国内外实验室在数据清洗、去重、配比、合成数据、数据选择与污染治理上的论文与官方消息，按时间倒序收录，区分一手 / 二手 / 传闻，可按实验室与主题筛选。</p>
+        <span class="go">开始阅读</span>
+      </a>
+
+      <a class="card c3" href="数据质量近6个月汇总-2026-09.html">
+        <div class="tag-row"><span class="tag">汇总篇</span><span class="tag">2026.03–09 论文 · 政策 · 市场</span></div>
+        <h3>数据质量，大模型的隐形护城河（近六个月汇总）</h3>
+        <p>聚焦 2026 年 3—9 月：10 篇代表论文（含"过滤价值随算力衰减"的争议性工作）、中国国家数据局高质量数据集行动与地方政策时间线、训练数据产业的市场数字与商业模式演变。</p>
+        <span class="go">开始阅读</span>
+      </a>
+
+    </div>
+  </section>
+
+  <section class="sec" id="order">
+    <h2>推荐阅读顺序</h2>
+    <p class="sub">三页相互独立，但按下面的顺序读，论证最连贯。</p>
+    <ol class="order">
+      <li><b>先读框架篇</b>《数据质量优化对大模型价值》——建立"质量 = 单位 token 的有效梯度"的心智模型，看懂机制、工程与账本。</li>
+      <li><b>再读动态篇</b>《数据质量研究动态》——把框架对照到各实验室的真实做法，看哪些结论被证实、哪些仍在争论。</li>
+      <li><b>最后读汇总篇</b>《近六个月汇总》——把视角拉到最新的论文争议、中国政策与产业市场，判断这件事接下来往哪走。</li>
+    </ol>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    数据质量 × 大模型 · 研究阅读项目 ｜ 页面均为单文件静态 HTML，无外部请求，可直接离线打开或部署到 GitHub Pages。<br>
+    各报告页脚含完整的出处与核验说明；市场预测类数据口径各异，仅供参考，不构成投资建议。
+  </div>
+</footer>
+
+</body>
+</html>
