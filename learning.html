@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>学习路径 · 数据质量 × 大模型四阶段课程</title>
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#07090f; --bg-2:#0b0e16; --bg-3:#11151f;
+  --tx-0:rgba(255,255,255,.96); --tx-1:rgba(255,255,255,.80);
+  --tx-2:rgba(255,255,255,.58); --tx-3:rgba(255,255,255,.36);
+  --brd:rgba(255,255,255,.10); --brd-2:rgba(255,255,255,.20);
+  --sig:#4ADE9B; --ind:#818CF8; --amb:#FBBF24; --dan:#FB7185; --cy:#22D3EE;
+  --r-l:16px; --r-xl:24px; --r-full:9999px;
+  --ui:"Inter","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono","Cascadia Code",Consolas,"SF Mono",monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth; scroll-padding-top:78px}
+body{margin:0; background:var(--bg); color:var(--tx-0); font-family:var(--ui); font-size:15px; line-height:1.68;
+  -webkit-font-smoothing:antialiased; overflow-x:hidden}
+a{color:inherit; text-decoration:none}
+.wrap{width:min(920px,100% - 2.2rem); margin-inline:auto}
+h1,h2,h3{letter-spacing:-.022em; margin:0}
+b,strong{font-weight:750; color:#fff}
+body::before{content:""; position:fixed; inset:-30vh -10vw; z-index:-1; pointer-events:none;
+  background:
+    radial-gradient(40vw 34vw at 12% 2%, rgba(74,222,155,.12), transparent 62%),
+    radial-gradient(36vw 32vw at 88% 6%, rgba(34,211,238,.13), transparent 60%),
+    radial-gradient(30vw 30vw at 55% 44%, rgba(129,140,248,.07), transparent 65%);}
+.top{position:sticky; top:0; z-index:100; height:60px; background:rgba(7,9,15,.76);
+  backdrop-filter:blur(14px) saturate(160%); border-bottom:1px solid var(--brd)}
+.top-in{display:flex; align-items:center; gap:1rem; height:100%}
+.logo{display:flex; align-items:center; gap:.6rem; font-weight:800; white-space:nowrap; font-size:.94rem}
+.logo-note{width:24px; height:24px; border-radius:7px; flex:none; position:relative;
+  background:linear-gradient(135deg,var(--cy),var(--sig))}
+.logo-note::after{content:""; position:absolute; inset:7px 6px; border-radius:1.5px; background:var(--bg)}
+.top nav{display:flex; gap:.1rem; margin-left:auto; overflow-x:auto; scrollbar-width:none}
+.top nav::-webkit-scrollbar{display:none}
+.top nav a{padding:.34rem .66rem; border-radius:var(--r-full); font-size:.82rem; color:var(--tx-2); white-space:nowrap}
+.top nav a:hover{color:var(--tx-0); background:rgba(255,255,255,.08)}
+.top nav a.home{color:var(--sig); font-weight:700}
+
+.hero{padding:clamp(2.4rem,6vw,4rem) 0 1rem}
+.eyebrow{font-family:var(--mono); font-size:.74rem; letter-spacing:.16em; color:var(--cy);
+  display:inline-flex; align-items:center; gap:.5rem; margin-bottom:.9rem}
+.eyebrow::before{content:""; width:26px; height:1px; background:linear-gradient(90deg,var(--cy),transparent)}
+.hero h1{font-size:clamp(1.5rem,4.4vw,2.7rem); line-height:1.16; font-weight:850; text-wrap:balance}
+.hero h1 .g{background:linear-gradient(100deg,var(--cy) 5%,var(--sig) 60%,var(--ind) 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent}
+.hero .lede{max-width:70ch; color:var(--tx-1); margin:1rem 0 0}
+
+.stage{position:relative; margin:2.6rem 0; padding:0 0 0 3.4rem}
+.stage::before{content:""; position:absolute; left:1.05rem; top:2.6rem; bottom:-2.6rem;
+  width:2px; background:linear-gradient(180deg,var(--brd-2),transparent)}
+.stage:last-child::before{display:none}
+.stage .badge{
+  position:absolute; left:0; top:0; width:2.2rem; height:2.2rem; border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--mono); font-weight:700; font-size:.82rem; color:#07090f;
+}
+.s0 .badge{background:var(--cy)} .s1 .badge{background:var(--sig)}
+.s2 .badge{background:var(--ind)} .s3 .badge{background:var(--amb)}
+.stage h2{font-size:1.25rem; font-weight:800}
+.stage .meta{font-family:var(--mono); font-size:.74rem; letter-spacing:.1em; color:var(--tx-3); margin:.25rem 0 .9rem}
+.stage .goal{color:var(--tx-1); font-size:.94rem; margin-bottom:1rem}
+.stage .goal b{color:#fff}
+
+.blk{border:1px solid var(--brd); border-radius:var(--r-l); overflow:hidden; margin-bottom:.8rem;
+  background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.01))}
+.blk .blk-h{padding:.6rem 1rem; font-family:var(--mono); font-size:.72rem; letter-spacing:.12em;
+  color:var(--tx-2); border-bottom:1px solid var(--brd); background:rgba(255,255,255,.03)}
+.blk .blk-b{padding:.9rem 1rem}
+.blk ul{margin:0; padding-left:1.2em}
+.blk li{margin-bottom:.5rem; color:var(--tx-1); font-size:.9rem}
+.blk li:last-child{margin-bottom:0}
+.blk a{color:var(--cy); border-bottom:1px dotted rgba(34,211,238,.4)}
+.blk a:hover{color:#bff2fb}
+.quiz li{list-style:none; position:relative; padding-left:1.6rem}
+.quiz li::before{content:"?"; position:absolute; left:0; top:0; font-family:var(--mono);
+  font-weight:700; color:var(--amb)}
+.ex li::marker{content:"▸ "; color:var(--sig)}
+
+.tag{display:inline-block; font-family:var(--mono); font-size:.66rem; letter-spacing:.08em;
+  padding:.12rem .5rem; border-radius:var(--r-full); border:1px solid var(--brd-2);
+  color:var(--tx-2); margin-left:.4rem; vertical-align:2px}
+
+footer{border-top:1px solid var(--brd); margin-top:4rem; padding:1.8rem 0 3rem;
+  color:var(--tx-3); font-size:.8rem; line-height:1.9}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="wrap top-in">
+    <div class="logo"><span class="logo-note"></span><span>数据质量 × 大模型 · 学习路径</span></div>
+    <nav>
+      <a class="home" href="index.html">⌂ 首页</a>
+      <a href="#s0">S0 概念</a>
+      <a href="#s1">S1 机制</a>
+      <a href="#s2">S2 前沿</a>
+      <a href="#s3">S3 产业</a>
+    </nav>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <section class="hero">
+    <span class="eyebrow">LEARNING PATH · 4 STAGES · 建议 2–3 周</span>
+    <h1>从零到能参与讨论：<br><span class="g">数据质量四阶段学习路径</span></h1>
+    <p class="lede">
+      这条路径把项目里的三份报告和 65 条数据集编成一门迷你课程：
+      每个阶段有明确的<b>目标、阅读材料、自测题和产出物</b>。
+      完成 S3 后，你应该能读懂任意一家实验室的数据配方披露，并对"这条结论可信吗"形成自己的判断。
+    </p>
+  </section>
+
+  <!-- ================= S0 ================= -->
+  <section class="stage s0" id="s0">
+    <div class="badge">S0</div>
+    <h2>建立词汇表</h2>
+    <div class="meta">约 2 小时 · 材料：框架篇「术语速查」+「先给结论」</div>
+    <p class="goal"><b>目标：</b>能用一句话向同事解释：为什么说"质量 = 单位 token 的有效梯度"；
+      分清预训练 / 持续预训练 / 后训练对数据的不同要求。</p>
+    <div class="blk">
+      <div class="blk-h">READING · 阅读</div>
+      <div class="blk-b"><ul>
+        <li><a href="数据质量优化对大模型价值.html#glossary">框架篇 · 术语速查：十个词看懂数据质量讨论</a></li>
+        <li><a href="数据质量优化对大模型价值.html#tldr">框架篇 · 先给结论：六句话讲完</a></li>
+        <li><a href="数据质量优化对大模型价值.html#def">框架篇 · 定义：质量的四层与五维</a></li>
+      </ul></div>
+    </div>
+    <div class="blk">
+      <div class="blk-h">SELF-CHECK · 自测</div>
+      <div class="blk-b quiz"><ul>
+        <li>去重、过滤、配比分别解决什么问题？哪个决定"模型见过什么"，哪个决定"模型多看什么"？</li>
+        <li>为什么 SFT 阶段一万条精选样本可能比一百万条普通样本更好？</li>
+      </ul></div>
+    </div>
+    <div class="blk">
+      <div class="blk-h">OUTPUT · 产出物</div>
+      <div class="blk-b"><ul class="ex">
+        <li>用自己的话写一段 200 字的"数据质量是什么"，要求不使用"干净""脏"这类比喻。</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <!-- ================= S1 ================= -->
+  <section class="stage s1" id="s1">
+    <div class="badge">S1</div>
+    <h2>吃透机制与工程</h2>
+    <div class="meta">约 6–8 小时 · 材料：框架篇主线 + 分析页图表</div>
+    <p class="goal"><b>目标：</b>理解"数据更好 ≈ 算力更多"的机制链条；
+      能把一条数据流水线拆成可验收的工位；知道每个环节失败的后果。</p>
+    <div class="blk">
+      <div class="blk-h">READING · 阅读</div>
+      <div class="blk-b"><ul>
+        <li><a href="数据质量优化对大模型价值.html#mech">框架篇 · 机制：为什么"数据更好"能等价于"算力更多"</a></li>
+        <li><a href="数据质量优化对大模型价值.html#pipe">框架篇 · 工程：九个可验收的工位</a></li>
+        <li><a href="数据质量优化对大模型价值.html#cases">框架篇 · 案例：数据质量兑现成了什么</a>（LIMA、FineWeb-Edu、Phi 等）</li>
+        <li><a href="analysis.html#charts">分析页 · 图 1–4</a>：看 65 条动态里各主题的真实分布</li>
+      </ul></div>
+    </div>
+    <div class="blk">
+      <div class="blk-h">SELF-CHECK · 自测</div>
+      <div class="blk-b quiz"><ul>
+        <li>FineWeb-Edu 用 38B token 达到对照 300B token 的水平——如果过滤掉的不是"坏数据"而是"难数据"，这个结论还成立吗？</li>
+        <li>基准去污（decontamination）缺失时，模型报告里的哪个数字最先失真？</li>
+      </ul></div>
+    </div>
+    <div class="blk">
+      <div class="blk-h">OUTPUT · 产出物</div>
+      <div class="blk-b"><ul class="ex">
+        <li>画出一条八阶段数据流水线图，标注每阶段的工具与大致留存率（对照汇总篇 §3.2 核对）。</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <!-- ================= S2 ================= -->
+  <section class="stage s2" id="s2">
+    <div class="badge">S2</div>
+    <h2>追踪前沿与争论</h2>
+    <div class="meta">约 6 小时 · 材料：动态篇 + 数据集 + 汇总篇论文区</div>
+    <p class="goal"><b>目标：</b>了解各家实验室在数据上的真实路线差异；
+      能陈述至少两个"文献并不一致"的开放争论及其双方证据。</p>
+    <div class="blk">
+      <div class="blk-h">READING · 阅读</div>
+      <div class="blk-b"><ul>
+        <li><a href="数据质量研究动态-2025-2026.html#deepseek">动态篇 · DeepSeek：数据侧做了什么</a>（工业界最完整披露样本）</li>
+        <li><a href="数据质量研究动态-2025-2026.html#labs">动态篇 · 实验室画像</a> 与 <a href="数据质量研究动态-2025-2026.html#trends">方法论趋势</a></li>
+        <li><a href="数据质量研究动态-2025-2026.html#debate">动态篇 · 仍未解决的争论</a> + <a href="数据质量优化对大模型价值.html#limits">框架篇 · 争议清单</a></li>
+        <li><a href="数据质量近6个月汇总-2026-09.html#s2">汇总篇 · 近六个月代表论文</a>：重点读 A Bitter Lesson for Data Filtering 与 LIMO/LIMR 两组相反方向的工作</li>
+        <li>动手：下载 <a href="data/research-feed.csv">research-feed.csv</a>，按 lab 或 topic 自己筛选一遍，复现分析页的某个结论</li>
+      </ul></div>
+    </div>
+    <div class="blk">
+      <div class="blk-h">SELF-CHECK · 自测</div>
+      <div class="blk-b quiz"><ul>
+        <li>"过滤价值随算力衰减"（Bitter Lesson for Data Filtering）和"好数据是最便宜的性能提升"矛盾吗？各自的前提是什么？</li>
+        <li>DeepSeek V4 为什么专门过滤"批量生成与模板化网页"？这和模型坍缩（model collapse）是什么关系？</li>
+      </ul></div>
+    </div>
+    <div class="blk">
+      <div class="blk-h">OUTPUT · 产出物</div>
+      <div class="blk-b"><ul class="ex">
+        <li>选一个开放争论（如合成数据配比上限），写一页 A4 的立场笔记：双方证据、你的判断、什么新证据会让你改变判断。</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <!-- ================= S3 ================= -->
+  <section class="stage s3" id="s3">
+    <div class="badge">S3</div>
+    <h2>看懂产业与政策</h2>
+    <div class="meta">约 3 小时 · 材料：汇总篇政策与产业部分</div>
+    <p class="goal"><b>目标：</b>理解数据质量为何同时是技术问题、商业问题与国家战略；
+      能向非技术管理者讲清投入产出。</p>
+    <div class="blk">
+      <div class="blk-h">READING · 阅读</div>
+      <div class="blk-b"><ul>
+        <li><a href="数据质量近6个月汇总-2026-09.html#s4">汇总篇 · 政策与产业动态</a>：国家数据局时间线 + 市场数字</li>
+        <li><a href="数据质量优化对大模型价值.html#roi">框架篇 · 投入产出：三本账与一个决策树</a></li>
+        <li><a href="数据质量近6个月汇总-2026-09.html#s5">汇总篇 · 趋势研判：给三类读者的启示</a></li>
+      </ul></div>
+    </div>
+    <div class="blk">
+      <div class="blk-h">SELF-CHECK · 自测</div>
+      <div class="blk-b quiz"><ul>
+        <li>数据服务商的商业模式从"卖劳力"转向"卖资产"，这个转变对毛利率意味着什么？</li>
+        <li>为什么欧盟 AI 法案第 10 条会把数据质量从最佳实践变成强制要求？</li>
+      </ul></div>
+    </div>
+    <div class="blk">
+      <div class="blk-h">OUTPUT · 产出物</div>
+      <div class="blk-b"><ul class="ex">
+        <li>以"是否值得自建高质量数据集"为题，套用三本账框架给你的团队写一份半页决策建议。</li>
+      </ul></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    数据质量 × 大模型 · 研究阅读项目 ｜ 学习路径基于项目内三份报告与 65 条结构化数据集编排，全部材料随仓库公开。
+  </div>
+</footer>
+
+</body>
+</html>

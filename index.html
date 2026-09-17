@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>数据质量 × 大模型 · 研究阅读项目</title>
+<title>数据质量 × 大模型 · 学习分析项目</title>
 <style>
 :root{
   color-scheme: dark;
@@ -77,12 +77,16 @@ body::before{
 .card.c1::before{background:linear-gradient(90deg,var(--sig),transparent)}
 .card.c2::before{background:linear-gradient(90deg,var(--cy),transparent)}
 .card.c3::before{background:linear-gradient(90deg,var(--amb),transparent)}
+.card.c4::before{background:linear-gradient(90deg,var(--ind),transparent)}
+.card.c5::before{background:linear-gradient(90deg,var(--dan),transparent)}
 .card .tag-row{display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:.9rem}
 .card .tag{font-family:var(--mono); font-size:.68rem; letter-spacing:.08em; padding:.18rem .55rem;
   border-radius:var(--r-full); border:1px solid var(--brd-2); color:var(--tx-2)}
 .card.c1 .tag{border-color:rgba(74,222,155,.4); color:#c9ffe6}
 .card.c2 .tag{border-color:rgba(34,211,238,.4); color:#bff2fb}
 .card.c3 .tag{border-color:rgba(251,191,36,.4); color:#fde9b8}
+.card.c4 .tag{border-color:rgba(129,140,248,.4); color:#dfe3ff}
+.card.c5 .tag{border-color:rgba(251,113,133,.4); color:#ffd9de}
 .card h3{font-size:1.12rem; font-weight:800; line-height:1.45; margin-bottom:.6rem}
 .card p{color:var(--tx-2); font-size:.88rem; margin:0 0 1.1rem; flex:1}
 .card .go{
@@ -90,6 +94,7 @@ body::before{
   display:inline-flex; align-items:center; gap:.45rem;
 }
 .card.c1 .go{color:var(--sig)} .card.c2 .go{color:var(--cy)} .card.c3 .go{color:var(--amb)}
+.card.c4 .go{color:var(--ind)} .card.c5 .go{color:var(--dan)}
 .card .go::after{content:"→"; transition:transform .2s}
 .card:hover .go::after{transform:translateX(4px)}
 
@@ -116,7 +121,9 @@ footer a{color:var(--tx-2); border-bottom:1px dotted var(--brd-2)}
   <div class="wrap top-in">
     <div class="logo"><span class="logo-note"></span><span>数据质量 × 大模型</span></div>
     <nav>
-      <a href="#reports">三份报告</a>
+      <a href="#reports">报告与工具</a>
+      <a href="analysis.html">数据分析</a>
+      <a href="learning.html">学习路径</a>
       <a href="#order">阅读顺序</a>
     </nav>
   </div>
@@ -129,20 +136,23 @@ footer a{color:var(--tx-2); border-bottom:1px dotted var(--brd-2)}
     <h1>数据质量 × 大模型：<br><span class="g">一个可阅读的研究项目</span></h1>
     <p class="lede">
       当算力与模型架构趋于同质化，<b>数据质量</b>成为拉开模型能力差距的核心变量。
-      本项目把这一主题的研究整理成三份互相衔接的单页报告：一份讲清<b>机制与价值</b>，
-      一份追踪<b>各实验室的最新动态</b>，一份汇总<b>近六个月的论文、政策与市场</b>。
-      所有页面均为单文件、无外部请求，关键数字标注来源。
+      本项目是一个<b>学习分析项目</b>：三份互相衔接的单页报告讲清<b>机制、动态与半年汇总</b>；
+      一个从报告中结构化抽取的 <b>65 条研究动态数据集</b>（JSON + CSV，随仓库公开）；
+      一个<b>定量分析层</b>回答"这一领域的热度、结构与信源质量如何"；
+      以及一条<b>四阶段学习路径</b>把全部材料串成可执行的课程。
+      所有页面均为单文件、无外部请求，关键数字标注来源，分析脚本可复现。
     </p>
     <div class="stats">
       <div class="stat"><div class="n">3<small>份报告</small></div><div class="l">框架解读 · 研究动态 · 半年汇总，互为补充</div></div>
+      <div class="stat"><div class="n">65<small>条</small></div><div class="l">结构化数据集：26 家实验室 · 19 个月 · 11 个主题</div></div>
       <div class="stat"><div class="n">100+<small>条</small></div><div class="l">论文、技术报告、政策文件与市场数据出处</div></div>
       <div class="stat"><div class="n">2026-09<small>更新</small></div><div class="l">研究动态数据截至 2026 年 9 月 16 日</div></div>
     </div>
   </section>
 
   <section class="sec" id="reports">
-    <h2>三份报告</h2>
-    <p class="sub">点击卡片进入阅读；每页顶部导航可返回本首页。</p>
+    <h2>报告与工具</h2>
+    <p class="sub">三份报告 + 数据集 + 定量分析 + 学习路径，点击卡片进入；每页顶部导航可返回本首页。</p>
     <div class="cards">
 
       <a class="card c1" href="数据质量优化对大模型价值.html">
@@ -166,15 +176,30 @@ footer a{color:var(--tx-2); border-bottom:1px dotted var(--brd-2)}
         <span class="go">开始阅读</span>
       </a>
 
+      <a class="card c4" href="analysis.html">
+        <div class="tag-row"><span class="tag">分析层</span><span class="tag">定量画像 · 可复现</span></div>
+        <h3>研究动态的定量分析：热度、结构与信源质量</h3>
+        <p>从动态篇抽取的 65 条结构化数据集（data/ 下 JSON + CSV），用脚本回答五个问题：哪个月最热、哪些主题最多、谁在发声、信源有多可靠、还有哪些盲区。4 张图表由 analysis/ 里的脚本一键重新生成。</p>
+        <span class="go">查看分析</span>
+      </a>
+
+      <a class="card c5" href="learning.html">
+        <div class="tag-row"><span class="tag">学习路径</span><span class="tag">四阶段 · 自测 · 产出</span></div>
+        <h3>把三份报告学成一门课</h3>
+        <p>按"概念 → 机制 → 前沿 → 产业"四个阶段重排全部材料：每阶段给出阅读清单（锚定到报告具体章节）、自测题与一件可交付的产出物，走完约 2–3 周，最后能独立做一份数据质量尽调。</p>
+        <span class="go">开始学习</span>
+      </a>
+
     </div>
   </section>
 
   <section class="sec" id="order">
     <h2>推荐阅读顺序</h2>
-    <p class="sub">三页相互独立，但按下面的顺序读，论证最连贯。</p>
+    <p class="sub">五个页面相互独立，但按下面的顺序读，论证最连贯；想按课程节奏学，直接用 <a href="learning.html">学习路径页</a>。</p>
     <ol class="order">
       <li><b>先读框架篇</b>《数据质量优化对大模型价值》——建立"质量 = 单位 token 的有效梯度"的心智模型，看懂机制、工程与账本。</li>
       <li><b>再读动态篇</b>《数据质量研究动态》——把框架对照到各实验室的真实做法，看哪些结论被证实、哪些仍在争论。</li>
+      <li><b>然后看数据分析</b>《研究动态的定量分析》——把这 65 条动态当成一个数据集，看热度曲线、主题结构与信源分布，形成自己的判断。</li>
       <li><b>最后读汇总篇</b>《近六个月汇总》——把视角拉到最新的论文争议、中国政策与产业市场，判断这件事接下来往哪走。</li>
     </ol>
   </section>
@@ -183,7 +208,7 @@ footer a{color:var(--tx-2); border-bottom:1px dotted var(--brd-2)}
 
 <footer>
   <div class="wrap">
-    数据质量 × 大模型 · 研究阅读项目 ｜ 页面均为单文件静态 HTML，无外部请求，可直接离线打开或部署到 GitHub Pages。<br>
+    数据质量 × 大模型 · 学习分析项目 ｜ 页面均为单文件静态 HTML，无外部请求，可直接离线打开或部署到 GitHub Pages；数据集与分析脚本见 data/ 与 analysis/ 目录。<br>
     各报告页脚含完整的出处与核验说明；市场预测类数据口径各异，仅供参考，不构成投资建议。
   </div>
 </footer>

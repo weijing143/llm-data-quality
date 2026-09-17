@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>数据分析 · 65 条研究动态的定量画像</title>
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#07090f; --bg-2:#0b0e16; --bg-3:#11151f;
+  --tx-0:rgba(255,255,255,.96); --tx-1:rgba(255,255,255,.80);
+  --tx-2:rgba(255,255,255,.58); --tx-3:rgba(255,255,255,.36);
+  --brd:rgba(255,255,255,.10); --brd-2:rgba(255,255,255,.20);
+  --sig:#4ADE9B; --ind:#818CF8; --amb:#FBBF24; --dan:#FB7185; --cy:#22D3EE;
+  --r-l:16px; --r-full:9999px;
+  --ui:"Inter","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono","Cascadia Code",Consolas,"SF Mono",monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth; scroll-padding-top:78px}
+body{margin:0; background:var(--bg); color:var(--tx-0); font-family:var(--ui); font-size:15px; line-height:1.68;
+  -webkit-font-smoothing:antialiased; overflow-x:hidden}
+a{color:inherit; text-decoration:none}
+.wrap{width:min(1080px,100% - 2.2rem); margin-inline:auto}
+h1,h2,h3{letter-spacing:-.022em; margin:0}
+b,strong{font-weight:750; color:#fff}
+body::before{content:""; position:fixed; inset:-30vh -10vw; z-index:-1; pointer-events:none;
+  background:
+    radial-gradient(40vw 34vw at 12% 2%, rgba(74,222,155,.12), transparent 62%),
+    radial-gradient(36vw 32vw at 88% 6%, rgba(34,211,238,.13), transparent 60%),
+    radial-gradient(30vw 30vw at 55% 44%, rgba(129,140,248,.07), transparent 65%);}
+.top{position:sticky; top:0; z-index:100; height:60px; background:rgba(7,9,15,.76);
+  backdrop-filter:blur(14px) saturate(160%); border-bottom:1px solid var(--brd)}
+.top-in{display:flex; align-items:center; gap:1rem; height:100%}
+.logo{display:flex; align-items:center; gap:.6rem; font-weight:800; white-space:nowrap; font-size:.94rem}
+.logo-note{width:24px; height:24px; border-radius:7px; flex:none; position:relative;
+  background:linear-gradient(135deg,var(--cy),var(--sig))}
+.logo-note::after{content:""; position:absolute; inset:7px 6px; border-radius:1.5px; background:var(--bg)}
+.top nav{display:flex; gap:.1rem; margin-left:auto; overflow-x:auto; scrollbar-width:none}
+.top nav::-webkit-scrollbar{display:none}
+.top nav a{padding:.34rem .66rem; border-radius:var(--r-full); font-size:.82rem; color:var(--tx-2); white-space:nowrap}
+.top nav a:hover{color:var(--tx-0); background:rgba(255,255,255,.08)}
+.top nav a.home{color:var(--sig); font-weight:700}
+
+.hero{padding:clamp(2.4rem,6vw,4rem) 0 1rem}
+.eyebrow{font-family:var(--mono); font-size:.74rem; letter-spacing:.16em; color:var(--cy);
+  display:inline-flex; align-items:center; gap:.5rem; margin-bottom:.9rem}
+.eyebrow::before{content:""; width:26px; height:1px; background:linear-gradient(90deg,var(--cy),transparent)}
+.hero h1{font-size:clamp(1.5rem,4.4vw,2.7rem); line-height:1.16; font-weight:850; text-wrap:balance}
+.hero h1 .g{background:linear-gradient(100deg,var(--cy) 5%,var(--sig) 60%,var(--ind) 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent}
+.hero .lede{max-width:70ch; color:var(--tx-1); margin:1rem 0 0}
+.stats{display:grid; gap:.7rem; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); margin-top:1.4rem}
+.stat{border:1px solid var(--brd); border-radius:var(--r-l); padding:.85rem 1rem;
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015))}
+.stat .n{font-family:var(--mono); font-size:1.3rem; font-weight:700; color:#fff}
+.stat .l{font-size:.79rem; color:var(--tx-2); margin-top:.25rem}
+
+.sec{margin:3rem 0}
+.sec h2{font-size:1.3rem; font-weight:800; margin-bottom:.35rem}
+.sec .sub{color:var(--tx-2); font-size:.88rem; margin-bottom:1.2rem}
+.chart{border:1px solid var(--brd); border-radius:var(--r-l); background:var(--bg-2);
+  padding:1rem; margin-bottom:1rem}
+.chart img{display:block; width:100%; height:auto; border-radius:10px}
+.chart .cap{font-size:.8rem; color:var(--tx-3); margin-top:.6rem}
+.two{display:grid; gap:1rem; grid-template-columns:1fr 1fr}
+@media(max-width:760px){.two{grid-template-columns:1fr}}
+
+.finding{border-left:3px solid var(--sig); background:rgba(74,222,155,.06);
+  padding:.9rem 1.1rem; border-radius:0 12px 12px 0; margin-bottom:.9rem; color:var(--tx-1); font-size:.92rem}
+.finding b{color:#c9ffe6}
+.finding.warn{border-color:var(--amb); background:rgba(251,191,36,.06)}
+.finding.warn b{color:#fde9b8}
+
+code.k{font-family:var(--mono); font-size:.82em; background:rgba(255,255,255,.07);
+  border:1px solid var(--brd); border-radius:5px; padding:.08em .4em; color:var(--cy)}
+
+.tbl{width:100%; border-collapse:collapse; font-size:.88rem}
+.tbl th{font-family:var(--mono); text-align:left; font-size:.74rem; letter-spacing:.08em;
+  color:var(--tx-2); border-bottom:1px solid var(--brd-2); padding:.5rem .7rem}
+.tbl td{border-bottom:1px solid var(--brd); padding:.55rem .7rem; color:var(--tx-1); vertical-align:top}
+.tbl td:first-child{color:var(--tx-0); font-weight:600}
+
+.dl{display:inline-flex; align-items:center; gap:.4rem; border:1px solid var(--brd-2);
+  border-radius:var(--r-full); padding:.4rem .9rem; font-size:.84rem; font-weight:600;
+  color:var(--tx-1); margin-right:.5rem; transition:.2s}
+.dl:hover{border-color:var(--sig); color:#c9ffe6}
+
+footer{border-top:1px solid var(--brd); margin-top:4rem; padding:1.8rem 0 3rem;
+  color:var(--tx-3); font-size:.8rem; line-height:1.9}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="wrap top-in">
+    <div class="logo"><span class="logo-note"></span><span>数据质量 × 大模型 · 分析</span></div>
+    <nav>
+      <a class="home" href="index.html">⌂ 首页</a>
+      <a href="#findings">发现</a>
+      <a href="#charts">图表</a>
+      <a href="#data">数据集</a>
+      <a href="#method">方法</a>
+    </nav>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <section class="hero">
+    <span class="eyebrow">QUANTITATIVE ANALYSIS · 65 ITEMS · 2025-03 — 2026-09</span>
+    <h1>把动态页变成数据集：<br><span class="g">65 条记录的定量画像</span></h1>
+    <p class="lede">
+      本页是《数据质量研究动态》的"数据层"：把页面内嵌的 <b>65 条</b>研究动态抽取为结构化数据集
+      （<code class="k">data/research-feed.json</code> / <code class="k">.csv</code>），
+      用 <code class="k">analysis/analyze.py</code> 跑出可复现的统计与图表。
+      分析口径、脚本与原始数据全部随仓库公开，任何人可以重跑验证。
+    </p>
+    <div class="stats">
+      <div class="stat"><div class="n">65<small>条</small></div><div class="l">研究动态条目（论文 / 技术报告 / 官方消息）</div></div>
+      <div class="stat"><div class="n">26<small>家</small></div><div class="l">涉及的实验室、团队与机构</div></div>
+      <div class="stat"><div class="n">11<small>个</small></div><div class="l">研究主题分类</div></div>
+      <div class="stat"><div class="n">95.4%<small>官方</small></div><div class="l">一手信源占比（官方论文 / 报告 / 公告）</div></div>
+      <div class="stat"><div class="n">2025-03 → 2026-09</div><div class="l">覆盖时间跨度（19 个月）</div></div>
+    </div>
+  </section>
+
+  <!-- ============ 发现 ============ -->
+  <section class="sec" id="findings">
+    <h2>五个从数据里读出来的发现</h2>
+    <p class="sub">每条发现都可以在下方的图表与数据集中复核。</p>
+
+    <div class="finding"><b>① 数据质量研究在 2026 年年中出现明显脉冲。</b>
+      收录条目在 2026-06 达到单月峰值 11 条（此前最高的 2025-07 为 7 条），与 ICAE / ICLR 周期、
+      国家数据局《行业高质量数据集建设行动实施方案》（2026-06-03）发布同月叠加——学术产出与政策催化在同一窗口共振。</div>
+
+    <div class="finding"><b>② "预训练数据"仍是第一大主题（12 条），但"合成数据 + 数据治理"合计已与之持平（20 条）。</b>
+      领域重心正从"怎么洗干净原始语料"扩展到"怎么生产和管理数据"——数据从采集对象变成了生产对象。</div>
+
+    <div class="finding"><b>③ 学界与 DeepSeek 是两个最大供给极。</b>
+      学界论文 14 条、DeepSeek 官方动态 10 条，两者合计占 37%；DeepSeek 是单一公司中披露最详尽的，
+      从 V4 技术报告到招聘启事的 MinHash 表述，构成观察工业界数据管线的罕见窗口。</div>
+
+    <div class="finding warn"><b>④ 信源高度依赖一手材料：官方信源占 95.4%（62/65）。</b>
+      这是优点（可核验）也是盲区——二手分析与独立复现只有 3 条，意味着数据集反映的是"实验室自称做了什么"，
+      不等于"独立验证了什么"。阅读时应把官方表述当作主张而非结论。</div>
+
+    <div class="finding"><b>⑤ 主题分布呈哑铃型。</b>
+      一端是基础设施层的预训练数据 / 去重 / 配比（26 条），另一端是治理层的合成数据 / 数据治理 / 污染治理（22 条），
+      中间的"后训练数据"仅 2 条——不是后训练不重要，而是各实验室对后训练配方的披露显著更少。</div>
+  </section>
+
+  <!-- ============ 图表 ============ -->
+  <section class="sec" id="charts">
+    <h2>图表</h2>
+    <p class="sub">由 <code class="k">analysis/analyze.py</code> 从数据集直接生成；深色主题与全站一致。</p>
+
+    <div class="chart">
+      <img src="analysis/charts/by_month.png" alt="收录条目按月份分布" loading="lazy">
+      <div class="cap">图 1 · 收录条目按月份分布。峰值 2026-06（11 条），次峰 2025-07（7 条）。</div>
+    </div>
+
+    <div class="two">
+      <div class="chart">
+        <img src="analysis/charts/by_lab.png" alt="条目按实验室分布" loading="lazy">
+        <div class="cap">图 2 · 条目按实验室 / 团队分布（Top 10，绿色为最高项）。</div>
+      </div>
+      <div class="chart">
+        <img src="analysis/charts/by_kind.png" alt="信源类型构成" loading="lazy">
+        <div class="cap">图 3 · 信源类型构成：官方 62 条 / 二手 3 条 / 传闻 0 条。</div>
+      </div>
+    </div>
+
+    <div class="chart">
+      <img src="analysis/charts/by_topic.png" alt="条目按研究主题分布" loading="lazy">
+      <div class="cap">图 4 · 条目按研究主题分布：预训练数据 12 · 合成数据 10 · 数据治理 10 · 去重 7 · 数据配比 7 …</div>
+    </div>
+  </section>
+
+  <!-- ============ 数据集 ============ -->
+  <section class="sec" id="data">
+    <h2>数据集与复现</h2>
+    <p class="sub">数据从动态页内嵌的 FEED 数组抽取（<code class="k">analysis/extract_feed.js</code>），
+      字段为 date / lab / topic / kind / kindLabel / title / body / src。</p>
+    <p>
+      <a class="dl" href="data/research-feed.json">⬇ research-feed.json（完整字段）</a>
+      <a class="dl" href="data/research-feed.csv">⬇ research-feed.csv（表格预览）</a>
+      <a class="dl" href="analysis/stats.json">⬇ stats.json（统计结果）</a>
+    </p>
+    <table class="tbl">
+      <tr><th>文件</th><th>内容</th><th>生成方式</th></tr>
+      <tr><td>data/research-feed.json</td><td>65 条动态 + 实验室 / 工具 / 趋势 / 争论等 7 个结构化数组</td><td><code class="k">node analysis/extract_feed.js</code></td></tr>
+      <tr><td>data/research-feed.csv</td><td>FEED 的扁平表格版（剥掉 HTML 标签），供 Excel / pandas 直接读</td><td>同上</td></tr>
+      <tr><td>analysis/analyze.py</td><td>统计 + 4 张图表（matplotlib，CJK 字体已配置）</td><td><code class="k">python analysis/analyze.py</code></td></tr>
+      <tr><td>analysis/stats.json</td><td>按月份 / 实验室 / 主题 / 信源的完整统计</td><td>由 analyze.py 生成</td></tr>
+    </table>
+  </section>
+
+  <!-- ============ 方法 ============ -->
+  <section class="sec" id="method">
+    <h2>口径与局限</h2>
+    <div class="finding warn"><b>口径：</b>分析对象仅是《数据质量研究动态》人工收录的 65 条，
+      存在收录选择偏差——它不是全量文献计量，而是"这个学习项目关注了什么"的画像。</div>
+    <div class="finding warn"><b>局限：</b>条目由人工整理，主题与实验室标签为单标签粗分；
+      "官方"信源指论文 / 技术报告 / 官方公告，不代表内容经过独立复现。
+      汇总篇与框架篇的引用论文未纳入本次统计（两页与动态篇引用零重叠，见项目 README）。</div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    数据质量 × 大模型 · 研究阅读项目 ｜ 本页由 analysis/analyze.py 的计算结果支撑，数据与脚本随仓库公开，可复现。
+  </div>
+</footer>
+
+</body>
+</html>
