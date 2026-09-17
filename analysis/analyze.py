@@ -4,6 +4,7 @@
 用法: python analysis/analyze.py
 """
 import json
+import re
 import sys
 from collections import Counter
 from pathlib import Path
@@ -134,6 +135,22 @@ ax.text(0, 0, f"{stats['official_ratio']}%\n官方", ha="center", va="center",
 ax.set_title("信源类型构成", color=FG, fontsize=13, fontweight="bold", loc="left", pad=12)
 fig.savefig(CHARTS / "by_kind.png", bbox_inches="tight", facecolor=BG, dpi=150)
 plt.close(fig)
+
+# 把统计结果注入 analysis.html 内嵌的 JSON 块，让页面数字永远与数据集同步
+page = ROOT / "analysis.html"
+html = page.read_text(encoding="utf-8")
+if "<!--STATS-BEGIN-->" in html:
+    block = (
+        "<!--STATS-BEGIN-->\n"
+        '<script type="application/json" id="stats-data">'
+        + json.dumps(stats, ensure_ascii=False, separators=(",", ":"))
+        + "</script>\n<!--STATS-END-->"
+    )
+    html = re.sub(r"<!--STATS-BEGIN-->.*?<!--STATS-END-->", lambda _: block, html, flags=re.S)
+    page.write_text(html, encoding="utf-8")
+    print("已把最新统计注入 analysis.html 内嵌块")
+else:
+    print("警告：analysis.html 未找到 <!--STATS-BEGIN--> 标记，跳过注入")
 
 print(json.dumps(stats, ensure_ascii=False, indent=2))
 print("图表输出: analysis/charts/{by_month,by_lab,by_topic,by_kind}.png")

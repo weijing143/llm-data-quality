@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>数据分析 · 65 条研究动态的定量画像</title>
+<meta name="description" content="把 65 条数据质量研究动态变成数据集：月度热度、主题结构、实验室格局、信源质量，4 张可复现图表，数据与脚本全部公开。">
+<meta property="og:title" content="数据分析 · 65 条研究动态的定量画像">
+<meta property="og:description" content="月度热度、主题结构、实验室格局、信源质量：4 张可复现图表，数据与脚本全部公开。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://weijing143.github.io/llm-data-quality/analysis.html">
+<meta property="og:image" content="https://weijing143.github.io/llm-data-quality/assets/cover.png">
+<meta property="og:locale" content="zh_CN">
+<meta name="twitter:card" content="summary_large_image">
 <style>
 :root{
   color-scheme: dark;
@@ -108,20 +116,21 @@ footer{border-top:1px solid var(--brd); margin-top:4rem; padding:1.8rem 0 3rem;
 <main class="wrap">
 
   <section class="hero">
-    <span class="eyebrow">QUANTITATIVE ANALYSIS · 65 ITEMS · 2025-03 — 2026-09</span>
-    <h1>把动态页变成数据集：<br><span class="g">65 条记录的定量画像</span></h1>
+    <span class="eyebrow">QUANTITATIVE ANALYSIS · <span data-k="total">65</span> ITEMS · <span data-k="spanDash">2025-03 — 2026-09</span></span>
+    <h1>把动态页变成数据集：<br><span class="g"><span data-k="total">65</span> 条记录的定量画像</span></h1>
     <p class="lede">
-      本页是《数据质量研究动态》的"数据层"：把页面内嵌的 <b>65 条</b>研究动态抽取为结构化数据集
+      本页是《数据质量研究动态》的"数据层"：把页面内嵌的 <b><span data-k="total">65</span> 条</b>研究动态抽取为结构化数据集
       （<code class="k">data/research-feed.json</code> / <code class="k">.csv</code>），
       用 <code class="k">analysis/analyze.py</code> 跑出可复现的统计与图表。
       分析口径、脚本与原始数据全部随仓库公开，任何人可以重跑验证。
+      本页所有数字由 <code class="k">analyze.py</code> 注入的内嵌统计块渲染，数据更新后重跑脚本即可同步。
     </p>
     <div class="stats">
-      <div class="stat"><div class="n">65<small>条</small></div><div class="l">研究动态条目（论文 / 技术报告 / 官方消息）</div></div>
-      <div class="stat"><div class="n">26<small>家</small></div><div class="l">涉及的实验室、团队与机构</div></div>
-      <div class="stat"><div class="n">11<small>个</small></div><div class="l">研究主题分类</div></div>
-      <div class="stat"><div class="n">95.4%<small>官方</small></div><div class="l">一手信源占比（官方论文 / 报告 / 公告）</div></div>
-      <div class="stat"><div class="n">2025-03 → 2026-09</div><div class="l">覆盖时间跨度（19 个月）</div></div>
+      <div class="stat"><div class="n"><span data-k="total">65</span><small>条</small></div><div class="l">研究动态条目（论文 / 技术报告 / 官方消息）</div></div>
+      <div class="stat"><div class="n"><span data-k="labs">26</span><small>家</small></div><div class="l">涉及的实验室、团队与机构</div></div>
+      <div class="stat"><div class="n"><span data-k="topics">11</span><small>个</small></div><div class="l">研究主题分类</div></div>
+      <div class="stat"><div class="n"><span data-k="ratio">95.4%</span><small>官方</small></div><div class="l">一手信源占比（官方论文 / 报告 / 公告）</div></div>
+      <div class="stat"><div class="n"><span data-k="spanArrow">2025-03 → 2026-09</span></div><div class="l">覆盖时间跨度（<span data-k="months">19</span> 个月）</div></div>
     </div>
   </section>
 
@@ -131,23 +140,23 @@ footer{border-top:1px solid var(--brd); margin-top:4rem; padding:1.8rem 0 3rem;
     <p class="sub">每条发现都可以在下方的图表与数据集中复核。</p>
 
     <div class="finding"><b>① 数据质量研究在 2026 年年中出现明显脉冲。</b>
-      收录条目在 2026-06 达到单月峰值 11 条（此前最高的 2025-07 为 7 条），与 ICAE / ICLR 周期、
+      收录条目在 <span data-k="peakMonth">2026-06</span> 达到单月峰值 <span data-k="peakN">11</span> 条（此前最高的 <span data-k="secondMonth">2025-07</span> 为 <span data-k="secondN">7</span> 条），与 ICAE / ICLR 周期、
       国家数据局《行业高质量数据集建设行动实施方案》（2026-06-03）发布同月叠加——学术产出与政策催化在同一窗口共振。</div>
 
-    <div class="finding"><b>② "预训练数据"仍是第一大主题（12 条），但"合成数据 + 数据治理"合计已与之持平（20 条）。</b>
+    <div class="finding"><b>② "<span data-k="topTopic">预训练数据</span>"仍是第一大主题（<span data-k="topTopicN">12</span> 条），但"合成数据 + 数据治理"合计已与之持平（<span data-k="synthGov">20</span> 条）。</b>
       领域重心正从"怎么洗干净原始语料"扩展到"怎么生产和管理数据"——数据从采集对象变成了生产对象。</div>
 
     <div class="finding"><b>③ 学界与 DeepSeek 是两个最大供给极。</b>
-      学界论文 14 条、DeepSeek 官方动态 10 条，两者合计占 37%；DeepSeek 是单一公司中披露最详尽的，
+      <span data-k="topLab">学界</span>论文 <span data-k="topLabN">14</span> 条、DeepSeek 官方动态 <span data-k="ds">10</span> 条，两者合计占 <span data-k="topShare">37</span>%；DeepSeek 是单一公司中披露最详尽的，
       从 V4 技术报告到招聘启事的 MinHash 表述，构成观察工业界数据管线的罕见窗口。</div>
 
-    <div class="finding warn"><b>④ 信源高度依赖一手材料：官方信源占 95.4%（62/65）。</b>
-      这是优点（可核验）也是盲区——二手分析与独立复现只有 3 条，意味着数据集反映的是"实验室自称做了什么"，
+    <div class="finding warn"><b>④ 信源高度依赖一手材料：官方信源占 <span data-k="ratio">95.4%</span>（<span data-k="officialN">62</span>/<span data-k="total">65</span>）。</b>
+      这是优点（可核验）也是盲区——二手分析与独立复现只有 <span data-k="secondhandN">3</span> 条，意味着数据集反映的是"实验室自称做了什么"，
       不等于"独立验证了什么"。阅读时应把官方表述当作主张而非结论。</div>
 
     <div class="finding"><b>⑤ 主题分布呈哑铃型。</b>
-      一端是基础设施层的预训练数据 / 去重 / 配比（26 条），另一端是治理层的合成数据 / 数据治理 / 污染治理（22 条），
-      中间的"后训练数据"仅 2 条——不是后训练不重要，而是各实验室对后训练配方的披露显著更少。</div>
+      一端是基础设施层的预训练数据 / 去重 / 配比（<span data-k="infra">26</span> 条），另一端是治理层的合成数据 / 数据治理 / 污染治理（<span data-k="gov">22</span> 条），
+      中间的"后训练数据"仅 <span data-k="post">2</span> 条——不是后训练不重要，而是各实验室对后训练配方的披露显著更少。</div>
   </section>
 
   <!-- ============ 图表 ============ -->
@@ -157,7 +166,7 @@ footer{border-top:1px solid var(--brd); margin-top:4rem; padding:1.8rem 0 3rem;
 
     <div class="chart">
       <img src="analysis/charts/by_month.png" alt="收录条目按月份分布" loading="lazy">
-      <div class="cap">图 1 · 收录条目按月份分布。峰值 2026-06（11 条），次峰 2025-07（7 条）。</div>
+      <div class="cap">图 1 · 收录条目按月份分布。峰值 <span data-k="peakMonth">2026-06</span>（<span data-k="peakN">11</span> 条），次峰 <span data-k="secondMonth">2025-07</span>（<span data-k="secondN">7</span> 条）。</div>
     </div>
 
     <div class="two">
@@ -167,13 +176,13 @@ footer{border-top:1px solid var(--brd); margin-top:4rem; padding:1.8rem 0 3rem;
       </div>
       <div class="chart">
         <img src="analysis/charts/by_kind.png" alt="信源类型构成" loading="lazy">
-        <div class="cap">图 3 · 信源类型构成：官方 62 条 / 二手 3 条 / 传闻 0 条。</div>
+        <div class="cap">图 3 · 信源类型构成：官方 <span data-k="officialN">62</span> 条 / 二手 <span data-k="secondhandN">3</span> 条 / 传闻 <span data-k="rumorN">0</span> 条。</div>
       </div>
     </div>
 
     <div class="chart">
       <img src="analysis/charts/by_topic.png" alt="条目按研究主题分布" loading="lazy">
-      <div class="cap">图 4 · 条目按研究主题分布：预训练数据 12 · 合成数据 10 · 数据治理 10 · 去重 7 · 数据配比 7 …</div>
+      <div class="cap">图 4 · 条目按研究主题分布：预训练数据 <span data-k="tPre">12</span> · 合成数据 <span data-k="tSynth">10</span> · 数据治理 <span data-k="tGov">10</span> · 去重 <span data-k="tDedup">7</span> · 数据配比 <span data-k="tMix">7</span> …</div>
     </div>
   </section>
 
@@ -189,7 +198,7 @@ footer{border-top:1px solid var(--brd); margin-top:4rem; padding:1.8rem 0 3rem;
     </p>
     <table class="tbl">
       <tr><th>文件</th><th>内容</th><th>生成方式</th></tr>
-      <tr><td>data/research-feed.json</td><td>65 条动态 + 实验室 / 工具 / 趋势 / 争论等 7 个结构化数组</td><td><code class="k">node analysis/extract_feed.js</code></td></tr>
+      <tr><td>data/research-feed.json</td><td><span data-k="total">65</span> 条动态 + 实验室 / 工具 / 趋势 / 争论等 7 个结构化数组</td><td><code class="k">node analysis/extract_feed.js</code></td></tr>
       <tr><td>data/research-feed.csv</td><td>FEED 的扁平表格版（剥掉 HTML 标签），供 Excel / pandas 直接读</td><td>同上</td></tr>
       <tr><td>analysis/analyze.py</td><td>统计 + 4 张图表（matplotlib，CJK 字体已配置）</td><td><code class="k">python analysis/analyze.py</code></td></tr>
       <tr><td>analysis/stats.json</td><td>按月份 / 实验室 / 主题 / 信源的完整统计</td><td>由 analyze.py 生成</td></tr>
@@ -199,7 +208,7 @@ footer{border-top:1px solid var(--brd); margin-top:4rem; padding:1.8rem 0 3rem;
   <!-- ============ 方法 ============ -->
   <section class="sec" id="method">
     <h2>口径与局限</h2>
-    <div class="finding warn"><b>口径：</b>分析对象仅是《数据质量研究动态》人工收录的 65 条，
+    <div class="finding warn"><b>口径：</b>分析对象仅是《数据质量研究动态》人工收录的 <span data-k="total">65</span> 条，
       存在收录选择偏差——它不是全量文献计量，而是"这个学习项目关注了什么"的画像。</div>
     <div class="finding warn"><b>局限：</b>条目由人工整理，主题与实验室标签为单标签粗分；
       "官方"信源指论文 / 技术报告 / 官方公告，不代表内容经过独立复现。
@@ -210,9 +219,50 @@ footer{border-top:1px solid var(--brd); margin-top:4rem; padding:1.8rem 0 3rem;
 
 <footer>
   <div class="wrap">
-    数据质量 × 大模型 · 研究阅读项目 ｜ 本页由 analysis/analyze.py 的计算结果支撑，数据与脚本随仓库公开，可复现。
+    数据质量 × 大模型 · 学习分析项目 ｜ 本页数字由内嵌统计块渲染，与 analysis/stats.json 同步；数据与脚本随仓库公开，可复现。
   </div>
 </footer>
+
+<!--STATS-BEGIN-->
+<script type="application/json" id="stats-data">{"total_items":65,"lab_count":26,"topic_count":11,"span":"2025-03 ~ 2026-09","by_lab":{"学界":14,"DeepSeek":10,"Apple":5,"工具链":4,"HuggingFace":3,"月之暗面":2,"智谱":2,"面壁智能":2,"阶跃星辰":2,"NVIDIA":2,"Microsoft":2,"Google":2,"Cohere":2,"字节 Seed":1,"MiniMax":1,"腾讯混元":1,"百度":1,"上海 AI Lab":1,"阿里通义":1,"Ai2":1,"Meta":1,"OpenAI":1,"Anthropic":1,"Mistral":1,"工具与基准":1,"监管":1},"by_topic":{"预训练数据":12,"合成数据":10,"数据治理":10,"去重":7,"数据配比":7,"工具与基准":6,"数据集":4,"数据质量定义":3,"后训练数据":2,"开源数据资产":2,"污染治理":2},"by_kind":{"官方":62,"二手":3},"by_month":{"2025-03":3,"2025-04":2,"2025-05":2,"2025-06":4,"2025-07":7,"2025-09":3,"2025-10":4,"2025-11":3,"2025-12":4,"2026-01":1,"2026-02":5,"2026-03":2,"2026-04":1,"2026-05":1,"2026-06":11,"2026-07":3,"2026-08":4,"2026-09":5},"official_ratio":95.4,"top_lab":"学界","top_lab_n":14,"top_topic":"预训练数据","top_topic_n":12}</script>
+<!--STATS-END-->
+<script>
+(function () {
+  // 页面所有带 data-k 的数字由内嵌统计块渲染；analyze.py 每次运行会重写该块，保证与数据集同步。
+  var s = JSON.parse(document.getElementById("stats-data").textContent);
+  var bm = s.by_month, bt = s.by_topic, bl = s.by_lab, bk = s.by_kind;
+  var me = Object.keys(bm).map(function (k) { return [k, bm[k]]; }).sort(function (a, b) { return b[1] - a[1]; });
+  var synthGov = (bt["合成数据"] || 0) + (bt["数据治理"] || 0);
+  var span = s.span.split(" ~ ");
+  var sm = span[0].split("-"), em = span[1].split("-");
+  var ds = bl["DeepSeek"] || 0;
+  var vals = {
+    total: s.total_items,
+    labs: s.lab_count,
+    topics: s.topic_count,
+    ratio: s.official_ratio + "%",
+    spanDash: span[0] + " — " + span[1],
+    spanArrow: span[0] + " → " + span[1],
+    months: (Number(em[0]) - Number(sm[0])) * 12 + (Number(em[1]) - Number(sm[1])) + 1,
+    peakMonth: me[0][0], peakN: me[0][1],
+    secondMonth: me[1][0], secondN: me[1][1],
+    topTopic: s.top_topic, topTopicN: s.top_topic_n,
+    synthGov: synthGov,
+    topLab: s.top_lab, topLabN: s.top_lab_n, ds: ds,
+    topShare: Math.round((s.top_lab_n + ds) / s.total_items * 100),
+    officialN: bk["官方"] || 0, secondhandN: bk["二手"] || 0, rumorN: bk["传闻"] || 0,
+    infra: (bt["预训练数据"] || 0) + (bt["去重"] || 0) + (bt["数据配比"] || 0),
+    gov: synthGov + (bt["污染治理"] || 0),
+    post: bt["后训练数据"] || 0,
+    tPre: bt["预训练数据"] || 0, tSynth: bt["合成数据"] || 0, tGov: bt["数据治理"] || 0,
+    tDedup: bt["去重"] || 0, tMix: bt["数据配比"] || 0
+  };
+  document.querySelectorAll("[data-k]").forEach(function (el) {
+    var k = el.getAttribute("data-k");
+    if (k in vals) el.textContent = vals[k];
+  });
+})();
+</script>
 
 </body>
 </html>
