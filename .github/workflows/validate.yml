@@ -1,0 +1,38 @@
+name: validate-dataset
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 从报告页重新抽取数据集
+        run: node analysis/extract_feed.js
+
+      - name: 数据集与报告页一致性（忽略 extractedAt 日期字段）
+        run: |
+          python - <<'EOF'
+          import json, subprocess, sys
+          committed = json.loads(subprocess.check_output(["git", "show", "HEAD:data/research-feed.json"]).decode("utf-8"))
+          fresh = json.load(open("data/research-feed.json", encoding="utf-8"))
+          committed.pop("extractedAt", None); fresh.pop("extractedAt", None)
+          if committed != fresh:
+              print("数据集与报告页不同步：请本地重跑 node analysis/extract_feed.js 后再提交")
+              sys.exit(1)
+          print("数据集与报告页一致")
+          EOF
+
+      - name: 数据集结构与口径校验
+        run: python analysis/validate.py

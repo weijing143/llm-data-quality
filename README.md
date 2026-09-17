@@ -17,10 +17,12 @@
 | `数据质量研究动态-2025-2026.html` | 动态篇 | DeepSeek 与国内外实验室近 12–18 个月的数据侧论文 / 技术报告 / 官方消息，按时间倒序，区分一手 / 二手 / 传闻，可按实验室与主题筛选 |
 | `数据质量近6个月汇总-2026-09.html` | 汇总篇 | 2026.03–09 的代表论文（含 "A Bitter Lesson for Data Filtering" 等争议性工作）、中国高质量数据集政策时间线、训练数据产业市场数字 |
 | `analysis.html` | 分析层 | 基于 65 条数据集的定量画像：月度热度、主题分布、实验室格局、信源质量与五个发现 |
-| `learning.html` | 学习路径 | 概念 → 机制 → 前沿 → 产业四阶段课程，含阅读清单、自测题与产出物 |
+| `learning.html` | 学习路径 | 概念 → 机制 → 前沿 → 产业四阶段课程，含阅读清单、自测题与产出物；勾选进度自动保存在本机浏览器 |
 | `data/research-feed.json` / `.csv` | 数据集 | 从动态篇抽取的 65 条研究动态：日期、实验室、主题、类型、信源等级、链接 |
+| `data/README.md` | 数据集文档 | 字段口径、枚举值、偏差声明与更新方法 |
 | `analysis/extract_feed.js` | 抽取脚本 | 从动态篇 HTML 中解析 `FEED` 等数组，重建 JSON / CSV |
-| `analysis/analyze.py` | 分析脚本 | 读取数据集，输出 `analysis/stats.json` 与 `analysis/charts/*.png` |
+| `analysis/analyze.py` | 分析脚本 | 读取数据集，输出 `analysis/stats.json`、图表，并把统计注入 `analysis.html` |
+| `analysis/validate.py` | 校验脚本 | 日期格式、枚举值、链接非空、条数单调不减；push 时由 GitHub Actions 自动运行 |
 
 ## 复现分析
 
@@ -30,9 +32,14 @@ cd llm-data-quality
 # 1. 从动态篇 HTML 重新抽取数据集（需要 Node.js）
 node analysis/extract_feed.js
 
-# 2. 重新计算统计并生成图表（需要 Python + matplotlib + pandas）
+# 2. 校验数据集（口径 / 格式 / 条数基线）
+python analysis/validate.py
+
+# 3. 重新计算统计并生成图表（需要 Python + matplotlib + pandas）
 python analysis/analyze.py
 ```
+
+每次 push 时 GitHub Actions 会自动重跑抽取与校验（`.github/workflows/validate.yml`）。
 
 ## 推荐阅读顺序
 

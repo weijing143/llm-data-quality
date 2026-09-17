@@ -94,6 +94,27 @@ body::before{content:""; position:fixed; inset:-30vh -10vw; z-index:-1; pointer-
   padding:.12rem .5rem; border-radius:var(--r-full); border:1px solid var(--brd-2);
   color:var(--tx-2); margin-left:.4rem; vertical-align:2px}
 
+/* 学习进度 */
+.pcard{border:1px solid var(--brd); border-radius:var(--r-l); padding:.85rem 1.1rem; margin-top:1.4rem;
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015));
+  display:flex; align-items:center; gap:1rem; flex-wrap:wrap}
+.pcard .plabel{font-family:var(--mono); font-size:.85rem; color:var(--tx-1); white-space:nowrap}
+.pcard .pbar{flex:1; min-width:140px; height:8px; border-radius:var(--r-full); background:rgba(255,255,255,.08); overflow:hidden}
+.pcard .pfill{height:100%; width:0; border-radius:var(--r-full);
+  background:linear-gradient(90deg,var(--cy),var(--sig)); transition:width .3s}
+.pcard button{background:none; border:1px solid var(--brd-2); color:var(--tx-2); border-radius:var(--r-full);
+  font-size:.74rem; padding:.2rem .7rem; cursor:pointer; font-family:var(--mono)}
+.pcard button:hover{color:var(--dan); border-color:var(--dan)}
+.blk li.track{list-style:none; position:relative; padding-left:1.7rem}
+.blk li.track .done-cb{position:absolute; left:0; top:.3em; width:.95rem; height:.95rem;
+  accent-color:var(--sig); cursor:pointer; margin:0}
+.blk li.done{color:var(--tx-3)}
+.blk li.done a{color:var(--tx-3); border-color:var(--brd)}
+.quiz li.track{padding-left:3.1rem}
+.quiz li.track::before{left:1.7rem}
+.blk li.track::marker{content:""}
+.stage .meta .sdone{color:var(--sig)}
+
 footer{border-top:1px solid var(--brd); margin-top:4rem; padding:1.8rem 0 3rem;
   color:var(--tx-3); font-size:.8rem; line-height:1.9}
 </style>
@@ -122,6 +143,14 @@ footer{border-top:1px solid var(--brd); margin-top:4rem; padding:1.8rem 0 3rem;
       这条路径把项目里的三份报告和 65 条数据集编成一门迷你课程：
       每个阶段有明确的<b>目标、阅读材料、自测题和产出物</b>。
       完成 S3 后，你应该能读懂任意一家实验室的数据配方披露，并对"这条结论可信吗"形成自己的判断。
+    </p>
+    <div class="pcard">
+      <span class="plabel" id="pLabel">0 / 0 完成</span>
+      <div class="pbar"><div class="pfill" id="pFill"></div></div>
+      <button id="pReset" type="button">重置进度</button>
+    </div>
+    <p class="lede" style="font-size:.82rem; color:var(--tx-3); margin-top:.6rem">
+      勾选每个条目左侧的方框记录进度，自动保存在本机浏览器（localStorage），不会上传。
     </p>
   </section>
 
@@ -252,9 +281,85 @@ footer{border-top:1px solid var(--brd); margin-top:4rem; padding:1.8rem 0 3rem;
 
 <footer>
   <div class="wrap">
-    数据质量 × 大模型 · 研究阅读项目 ｜ 学习路径基于项目内三份报告与 65 条结构化数据集编排，全部材料随仓库公开。
+    数据质量 × 大模型 · 学习分析项目 ｜ 学习路径基于项目内三份报告与 65 条结构化数据集编排，全部材料随仓库公开。
   </div>
 </footer>
+
+<script>
+(function () {
+  // 学习进度：每条阅读 / 自测 / 产出一个勾选框，状态存 localStorage，离线可用、不上传。
+  var KEY = "ldq-progress-v1";
+  var state = {};
+  try { state = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) {}
+
+  var items = [];
+  document.querySelectorAll(".stage").forEach(function (stage) {
+    stage.querySelectorAll(".blk").forEach(function (blk, bi) {
+      blk.querySelectorAll("li").forEach(function (li, i) {
+        items.push({ id: stage.id + "-" + bi + "-" + i, li: li, stage: stage.id });
+      });
+    });
+  });
+
+  var pLabel = document.getElementById("pLabel");
+  var pFill = document.getElementById("pFill");
+
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  function render() {
+    var done = items.filter(function (it) { return state[it.id]; }).length;
+    var total = items.length;
+    var pct = total ? Math.round(done / total * 100) : 0;
+    pLabel.textContent = done + " / " + total + " 完成（" + pct + "%）";
+    pFill.style.width = pct + "%";
+    // 每阶段进度写进 meta 行
+    document.querySelectorAll(".stage").forEach(function (stage) {
+      var sid = stage.id;
+      var st = items.filter(function (it) { return it.stage === sid; });
+      var sd = st.filter(function (it) { return state[it.id]; }).length;
+      var meta = stage.querySelector(".meta");
+      var tag = meta.querySelector(".sdone");
+      if (!tag) {
+        tag = document.createElement("span");
+        tag.className = "sdone";
+        meta.appendChild(tag);
+      }
+      tag.textContent = " · 已完成 " + sd + "/" + st.length + (sd === st.length && st.length ? " ✓" : "");
+    });
+  }
+
+  items.forEach(function (it) {
+    var cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.className = "done-cb";
+    cb.checked = !!state[it.id];
+    cb.setAttribute("aria-label", "标记完成");
+    cb.addEventListener("change", function () {
+      if (cb.checked) state[it.id] = true; else delete state[it.id];
+      save();
+      it.li.classList.toggle("done", cb.checked);
+      render();
+    });
+    it.li.classList.add("track");
+    if (cb.checked) it.li.classList.add("done");
+    it.li.insertBefore(cb, it.li.firstChild);
+  });
+
+  document.getElementById("pReset").addEventListener("click", function () {
+    state = {};
+    save();
+    items.forEach(function (it) {
+      it.li.classList.remove("done");
+      it.li.querySelector(".done-cb").checked = false;
+    });
+    render();
+  });
+
+  render();
+})();
+</script>
 
 </body>
 </html>
