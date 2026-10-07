@@ -138,3 +138,8 @@ python -m http.server 8000
 仓库需为**公开**（免费账号的私有仓库不支持 Pages）。
 Settings → Pages → Source 选 `main` 分支根目录，保存后访问
 `https://<你的用户名>.github.io/<仓库名>/`。
+
+## 许可证
+
+本项目内容（报告、数据集、文档）以 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/deed.zh-hans) 发布：
+可自由分享与改编（包括商业用途），前提是署名并注明出处链接。完整条文见 [LICENSE](LICENSE)。
