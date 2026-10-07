@@ -156,9 +156,53 @@
   footer .src a{color:var(--muted);}
   .toc{font-size:14px;color:var(--muted);margin-top:22px;}
   .toc a{margin-right:18px;white-space:nowrap;}
+
+  /* ===== Desktop enhancements (≥1100px) ===== */
+  @media(min-width:1100px){
+    .wrap{max-width:1000px;}
+    body{font-size:17px;}
+    h1{font-size:clamp(40px,4.6vw,60px);}
+    h2{font-size:31px;}
+    h3{font-size:20.5px;}
+    section{margin:88px 0;}
+    .stat .num{font-size:34px;}
+    .stat{padding:26px 24px;}
+    /* 论文条目：桌面端双列卡片 */
+    #s2{display:grid;grid-template-columns:1fr 1fr;gap:0 32px;}
+    #s2 .sec-head,#s2 .sec-note{grid-column:1/-1;}
+    #s2 .paper{border-top:none;border:1px solid var(--line);background:#fbf9f4;padding:20px 22px;margin-bottom:26px;}
+    #s2 .paper .p-title{font-size:17.5px;}
+  }
+
+  /* ===== 宽屏吸顶目录（≥1360px） ===== */
+  .side-toc{display:none;}
+  @media(min-width:1360px){
+    .side-toc{
+      display:block;position:fixed;z-index:50;
+      left:max(16px, calc(50% - 700px));top:132px;width:184px;
+      font-size:13px;line-height:1.6;
+    }
+    .side-toc .st-title{font-size:11px;letter-spacing:.25em;color:var(--muted);margin-bottom:10px;font-weight:700;}
+    .side-toc a{
+      display:block;padding:6px 0 6px 12px;border-bottom:none;
+      border-left:2px solid var(--line);color:var(--muted);
+    }
+    .side-toc a:hover{color:var(--forest);border-bottom:none;}
+    .side-toc a.active{border-left-color:var(--forest);color:var(--forest);font-weight:600;}
+  }
+  @media print{.side-toc{display:none!important;}}
 </style>
 </head>
 <body>
+
+<nav class="side-toc" aria-label="章节目录">
+  <div class="st-title">目录 · CONTENTS</div>
+  <a href="#s1">① 核心结论</a>
+  <a href="#s2">② 学术论文</a>
+  <a href="#s3">③ 机制解析</a>
+  <a href="#s4">④ 政策与产业</a>
+  <a href="#s5">⑤ 趋势研判</a>
+</nav>
 
 <header class="hero">
   <div class="wrap">
@@ -384,5 +428,24 @@
   </footer>
 
 </div>
+
+<script>
+/* 宽屏目录 scrollspy：高亮当前章节 */
+(function(){
+  var links=document.querySelectorAll('.side-toc a');
+  if(!links.length||!('IntersectionObserver' in window))return;
+  var map={};
+  links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a;});
+  var obs=new IntersectionObserver(function(es){
+    es.forEach(function(e){
+      if(e.isIntersecting){
+        links.forEach(function(a){a.classList.remove('active');});
+        var a=map[e.target.id];if(a)a.classList.add('active');
+      }
+    });
+  },{rootMargin:'-15% 0px -70% 0px'});
+  document.querySelectorAll('section[id]').forEach(function(s){obs.observe(s);});
+})();
+</script>
 </body>
 </html>

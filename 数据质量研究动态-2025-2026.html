@@ -185,6 +185,11 @@ footer li{margin:.28rem 0; line-height:1.55}
 .reveal.in{opacity:1; transform:none}
 @media (prefers-reduced-motion:reduce){*{animation:none!important; transition-duration:.001ms!important}}
 @media print{ body::before{display:none} .top,.filters{position:static} .reveal{opacity:1;transform:none} }
+
+/* ===== 大屏桌面增强：字号随 rem 基准整体放大，超宽屏适当加宽容器 ===== */
+@media (min-width:1500px){ html{font-size:17px} }
+@media (min-width:1900px){ html{font-size:18px} }
+@media (min-width:1700px){ .wrap{width:min(1360px,100% - 3rem)} }
 </style>
 </head>
 <body>
