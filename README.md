@@ -21,6 +21,10 @@ llm-data-quality/
 ├── 数据质量研究动态-2025-2026.html      ← 报告 · 动态篇：各实验室追踪 【数据集唯一来源；页脚 43 篇文献】
 ├── 数据质量近6个月汇总-2026-09.html     ← 报告 · 汇总篇：论文 / 政策 / 市场 【来源：页脚 7 篇 + 政策文号 + 市场报告】
 │
+├── report-framework.html               ← 短链别名：跳框架篇（英文文件名，便于分享）
+├── report-feed.html                    ← 短链别名：跳动态篇
+├── report-digest.html                  ← 短链别名：跳汇总篇
+│
 ├── data/                               ← 数据层
 │   ├── research-feed.json              · 结构化数据集（FEED 65 条 + 6 个附属数组，含 26 条信源清单）
 │   ├── research-feed.csv               · FEED 的扁平表格版（Excel / pandas 直读）
@@ -35,7 +39,8 @@ llm-data-quality/
 │   └── charts/                         · by_month / by_lab / by_topic / by_kind 四张图
 │
 ├── assets/
-│   └── cover.png                       ← 分享封面（OG 卡片图，1200×630）
+│   ├── cover.png                       ← 分享封面（OG 卡片图，1200×630）
+│   └── favicon.svg                     ← 全站图标（渐变方块，与 logo 同设计）
 │
 ├── .github/workflows/validate.yml      ← CI：push 时自动重抽取 + 一致性比对 + 校验
 │

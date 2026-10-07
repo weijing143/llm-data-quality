@@ -12,6 +12,7 @@
 <meta property="og:image" content="https://weijing143.github.io/llm-data-quality/assets/cover.png">
 <meta property="og:locale" content="zh_CN">
 <meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 <style>
 :root{
   color-scheme: dark;
@@ -117,6 +118,11 @@ body::before{content:""; position:fixed; inset:-30vh -10vw; z-index:-1; pointer-
 
 footer{border-top:1px solid var(--brd); margin-top:4rem; padding:1.8rem 0 3rem;
   color:var(--tx-3); font-size:.8rem; line-height:1.9}
+
+/* ===== 大屏桌面增强：字号随 rem 基准整体放大 ===== */
+@media (min-width:1500px){ html{font-size:17px} }
+@media (min-width:1900px){ html{font-size:18px} }
+@media (min-width:1700px){ .wrap{width:min(1080px,100% - 3rem)} }
 </style>
 </head>
 <body>

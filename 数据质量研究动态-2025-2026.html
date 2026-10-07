@@ -12,6 +12,7 @@
 <meta property="og:image" content="https://weijing143.github.io/llm-data-quality/assets/cover.png">
 <meta property="og:locale" content="zh_CN">
 <meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 <style>
 /* ============================================================
    令牌：与《数据质量优化对大模型价值》同一套视觉语言
@@ -190,9 +191,15 @@ footer li{margin:.28rem 0; line-height:1.55}
 @media (min-width:1500px){ html{font-size:17px} }
 @media (min-width:1900px){ html{font-size:18px} }
 @media (min-width:1700px){ .wrap{width:min(1360px,100% - 3rem)} }
+
+/* ===== 阅读进度条 ===== */
+.pbar{position:fixed; top:0; left:0; height:3px; width:0; z-index:300; pointer-events:none;
+  background:linear-gradient(90deg,var(--cy),var(--sig))}
+@media print{ .pbar{display:none!important} }
 </style>
 </head>
 <body>
+<div class="pbar" id="pbar"></div>
 
 <div class="top">
   <div class="wrap top-in">
@@ -1088,6 +1095,13 @@ const SOURCES = [
     links.forEach(a=>a.classList.toggle('on', a.getAttribute('href')==='#'+cur)); };
   addEventListener('scroll',mark,{passive:true}); mark();
 })();
+</script>
+<script>
+/* 阅读进度条 */
+(function(){var b=document.getElementById('pbar');if(!b)return;
+function u(){var h=document.documentElement,m=h.scrollHeight-h.clientHeight;
+b.style.width=(m>0?Math.min(100,(h.scrollTop/m)*100):0)+'%';}
+addEventListener('scroll',u,{passive:true});addEventListener('resize',u);u();})();
 </script>
 </body>
 </html>
